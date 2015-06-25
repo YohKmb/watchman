@@ -1,6 +1,11 @@
 #! /usr/bin/env python
 
-# __author__ = 'YohKmb'
+
+__author__ = "YohKmb <yoh134shonan@gmail.com"
+__status__ = "development"
+__version__ = "0.0.1"
+__date__    = "July 2015"
+
 
 import socket, struct, array
 import sys, os, time, logging
@@ -9,7 +14,7 @@ from threading import Thread, Event
 from collections import defaultdict
 from functools import wraps
 from contextlib import closing
-# from __future__ import division
+
 
 if sys.platform == "win32":  # choose an apppropriate timer module depending on the platform
     default_timer = time.clock
@@ -50,18 +55,6 @@ class Pinger(Thread):
                 # print sock
                 if not self._is_receiver:
                     self._work_on_myduty = self._send
-
-                    # resolved = []
-                    # for name_dst in self._targets:
-                    #     try:
-                    #         addr_dst = socket.gethostbyname(name_dst)
-                    #         resolved.append(addr_dst)
-                    #
-                    #     except socket.gaierror as excpt:
-                    #         logging.warning("{0} -> {1} is ignored".format(excpt.message, name_dst))
-                    #         # self._targets.remove(name_dst)
-                    # # sock.settimeout(self._timeout)
-                    # self._targets = resolved
 
                 else:
                     self._work_on_myduty = self._recv
@@ -243,13 +236,6 @@ def main():
         sys.exit(0)
 
     logging.info("main program exits")
-    # print Pinger.checksum("hogehoge")
-    # print icmp.checksum.__func__
-
-    # try:
-    #     print socket.gethostbyname("www.kernel.org")
-    # except socket.gaierror as e:
-    #     print e.__class__
 
 
 if __name__ == "__main__":
