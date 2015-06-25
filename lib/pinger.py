@@ -11,7 +11,7 @@ import socket, struct, array
 import sys, os, time, logging
 
 from threading import Thread, Event
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from functools import wraps
 from contextlib import closing
 
@@ -20,6 +20,14 @@ if sys.platform == "win32":  # choose an apppropriate timer module depending on 
     default_timer = time.clock
 else:
     default_timer = time.time
+
+ICMP_Header_Tuple = namedtuple("ICMP_Header", ("type", "code", "checksum", "id", "seq"))
+
+
+class ICMP_Header(ICMP_Header_Tuple):
+
+    def __repr__(self):
+        return self._asdict()
 
 
 class Pinger(Thread):
@@ -33,6 +41,7 @@ class Pinger(Thread):
 
     PROTO_STRUCT_FMT = "!BBHHH"
     PROTO_CODE = socket.getprotobyname("icmp")
+    # ICMP_Header = namedtuple("ICMP_Header", ("type", "code", "checksum", "id", "seq"))
 
     def __init__(self, targets=[], timeout=3.0, is_receiver=False):
 
@@ -116,12 +125,13 @@ class Pinger(Thread):
         t_recv = default_timer()
 
         try:
-            type, code, checksum, id, seq = struct.unpack(Pinger.PROTO_STRUCT_FMT, header)
+            header_decode = ICMP_Header_Tuple( *(struct.unpack(Pinger.PROTO_STRUCT_FMT, header)) )
+            # type, code, checksum, id, seq = struct.unpack(Pinger.PROTO_STRUCT_FMT, header)
         except struct.error as excpt:
             logging.warning("invalid header was detected : {0}".format(str(header)))
             return None
 
-        if type == Pinger.ICMP_ECHO_REP and id == self._id:
+        if header_decode.type == Pinger.ICMP_ECHO_REP and header_decode.id == self._id:
             nbytes_time = struct.calcsize("d")
             t_send = struct.unpack("d", packet[28:28 + nbytes_time])[0]
 
