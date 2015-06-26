@@ -16,31 +16,125 @@ from functools import wraps
 from contextlib import closing
 
 
-if sys.platform == "win32":  # choose an apppropriate timer module depending on the platform
+# choose an apppropriate timer module depending on the platform
+if sys.platform == "win32":
     default_timer = time.clock
 else:
     default_timer = time.time
 
-ICMP_Header_Tuple = namedtuple("ICMP_Header", ("type", "code", "checksum", "id", "seq"))
+
+class ICMP():
+
+    ICMP_ECHO_REQ = 0x08
+    ICMP_ECHO_REP = 0x00
+
+    PROTO_STRUCT_FMT = "!BBHHH"
+    PROTO_CODE = socket.getprotobyname("icmp")
+
+    def _checksum_wrapper(func):
+
+        # if struct.pack("H",1) == "\x00\x01": # big endian
+        if sys.byteorder == "big":
+
+            @wraps(func)
+            def _checksum_inner(cls, pkt):
+                if len(pkt) % 2 == 1:
+                    pkt += "\0"
+                s = sum(array.array("H", pkt))
+                s = (s >> 16) + (s & 0xffff)
+                s += s >> 16
+                s = ~s
+                return s & 0xffff
+        else:
+            @wraps(func)
+            def _checksum_inner(cls, pkt):
+                if len(pkt) % 2 == 1:
+                    pkt += "\0"
+                s = sum(array.array("H", pkt))
+                s = (s >> 16) + (s & 0xffff)
+                s += s >> 16
+                s = ~s
+                return (((s>>8)&0xff)|s<<8) & 0xffff
+
+        return _checksum_inner
+
+    @classmethod
+    @_checksum_wrapper
+    def checksum(cls, pkt):
+        pass
 
 
-class ICMP_Header(ICMP_Header_Tuple):
+class ICMP_Request(ICMP):
 
-    def __repr__(self):
-        return self._asdict()
+    @classmethod
+    def new_request(self, id, seq):
+
+        # Temporary header whose checksum is set to 0
+        chsum = 0
+
+        # Tuple format := ("type", "code", "checksum", "id", "seq")
+        req_header = struct.pack(ICMP_Request.PROTO_STRUCT_FMT,
+                                 ICMP_Request.ICMP_ECHO_REQ, 0, chsum, id, seq)
+
+        t_send = default_timer()
+        nbytes_t = struct.calcsize("d")
+
+        data = (64 - nbytes_t) * "P"
+        data = struct.pack("d", t_send) + data
+
+        chsum = ICMP_Request.checksum(req_header + data)
+        req_header = struct.pack(ICMP_Request.PROTO_STRUCT_FMT,
+                                 ICMP_Request.ICMP_ECHO_REQ, 0, chsum, id, seq)
+        packet = req_header + data
+
+        return packet
+
+
+# class ICMP_Echo(ICMP):
+#
+#     def __init__(self, id, seq):
+#         super(ICMP_Echo, self).__init__(ICMP.ICMP_ECHO_REQ, 0, id, seq)
+#
+#     def _build_packet(self, id, seq):
+#
+#         chsum = 0
+#         header = struct.pack(ICMP.PROTO_STRUCT_FMT, *tuple(self) )
+#         # Temporary header whose checksum was set to 0
+#
+#         t_send = default_timer()
+#         nbytes_t = struct.calcsize("d")
+#         # nbytes_t = sys.getsizeof(t_send) / 8
+#         data = (64 - nbytes_t) * "P"
+#         data = struct.pack("d", t_send) + data
+#
+#         chsum = Pinger.checksum(header + data)
+#         header = struct.pack(Pinger.PROTO_STRUCT_FMT,
+#                                  Pinger.ICMP_ECHO_REQ, 0, chsum, self._id, seq)
+#         packet = header + data
+#
+#         return packet
+
+# req_header = struct.pack(Pinger.PROTO_STRUCT_FMT,
+#                                  Pinger.ICMP_ECHO_REQ, 0, chsum, self._id, seq)
+# header_decode = ICMP_Header_Tuple( *(struct.unpack(Pinger.PROTO_STRUCT_FMT, header)) )
+
+# class ICMP_Echo(ICMP_Header_Tuple):
+#
+#     def __repr__(self):
+#         return self._asdict()
 
 
 class Pinger(Thread):
 
-    ICMP_ECHO_REQ = 0x08
-    ICMP_ECHO_REP = 0x00
+    # ICMP_ECHO_REQ = 0x08
+    # ICMP_ECHO_REP = 0x00
 
     MAX_TARGET = 5
     INTERVAL_PING = 1.0
     LEN_RECV = 1024
 
     PROTO_STRUCT_FMT = "!BBHHH"
-    PROTO_CODE = socket.getprotobyname("icmp")
+    # PROTO_CODE = socket.getprotobyname("icmp")
     # ICMP_Header = namedtuple("ICMP_Header", ("type", "code", "checksum", "id", "seq"))
 
     def __init__(self, targets=[], timeout=3.0, is_receiver=False):
@@ -60,7 +154,7 @@ class Pinger(Thread):
 
         try:
             with closing(socket.socket(family=socket.AF_INET, type=socket.SOCK_RAW,
-                                         proto=Pinger.PROTO_CODE) ) as sock:
+                                         proto=ICMP.PROTO_CODE) ) as sock:
                 # print sock
                 if not self._is_receiver:
                     self._work_on_myduty = self._send
@@ -97,21 +191,22 @@ class Pinger(Thread):
                 resolved.append(addr_dst)
 
             except socket.gaierror as excpt:
-                logging.warning("{0} -> {1} is ignored".format(excpt.message, name_dst))
+                logging.warning("{0} -> {1} is ignored".format(excpt.message, target))
                 targets.remove(target)
 
         self._targets = dict( zip(targets, resolved) )
 
     def _send(self, sock):
         # print str(self._targets)
-        res = []
+        results = []
 
         for target in self._targets.values():
             print target
-            res.append(self._send_one(sock, target) )
+            res = self._send_one(sock, target)
+            results.append(res)
 
         time.sleep(1.0)
-        return res
+        return results
 
     def _recv(self, sock):
 
@@ -125,13 +220,13 @@ class Pinger(Thread):
         t_recv = default_timer()
 
         try:
-            header_decode = ICMP_Header_Tuple( *(struct.unpack(Pinger.PROTO_STRUCT_FMT, header)) )
+            header_decode = ICMP_Header( *(struct.unpack(Pinger.PROTO_STRUCT_FMT, header)) )
             # type, code, checksum, id, seq = struct.unpack(Pinger.PROTO_STRUCT_FMT, header)
         except struct.error as excpt:
             logging.warning("invalid header was detected : {0}".format(str(header)))
             return None
 
-        if header_decode.type == Pinger.ICMP_ECHO_REP and header_decode.id == self._id:
+        if header_decode.type == ICMP.ICMP_ECHO_REP and header_decode.id == self._id:
             nbytes_time = struct.calcsize("d")
             t_send = struct.unpack("d", packet[28:28 + nbytes_time])[0]
 
