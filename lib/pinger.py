@@ -31,6 +31,8 @@ class ICMP():
     PROTO_STRUCT_FMT = "!BBHHH"
     PROTO_CODE = socket.getprotobyname("icmp")
 
+    NBYTES_TIME = struct.calcsize("d")
+
     def _checksum_wrapper(func):
 
         # if struct.pack("H",1) == "\x00\x01": # big endian
@@ -77,17 +79,40 @@ class ICMP_Request(ICMP):
                                  ICMP_Request.ICMP_ECHO_REQ, 0, chsum, id, seq)
 
         t_send = default_timer()
-        nbytes_t = struct.calcsize("d")
+        # nbytes_t = struct.calcsize("d")
 
-        data = (64 - nbytes_t) * "P"
+        data = (64 - ICMP.NBYTES_TIME) * "P"
         data = struct.pack("d", t_send) + data
 
-        chsum = ICMP_Request.checksum(req_header + data)
-        req_header = struct.pack(ICMP_Request.PROTO_STRUCT_FMT,
-                                 ICMP_Request.ICMP_ECHO_REQ, 0, chsum, id, seq)
+        chsum = ICMP.checksum(req_header + data)
+        req_header = struct.pack(ICMP.PROTO_STRUCT_FMT,
+                                 ICMP.ICMP_ECHO_REQ, 0, chsum, id, seq)
         packet = req_header + data
 
         return packet
+
+
+class ICMP_Reply(ICMP):
+
+    @classmethod
+    def decode_packet(self, packet, id_sent):
+
+        header = packet[20:28]
+        t_recv = default_timer()
+
+        try:
+            type, code, checksum, id_recv, seq = struct.unpack(ICMP.PROTO_STRUCT_FMT, header)
+        except struct.error as excpt:
+            logging.warning("invalid header was detected : {0}".format(str(header)))
+            return None
+
+        if type == ICMP.ICMP_ECHO_REP and id_recv == id_sent:
+            t_send = struct.unpack("d", packet[28:28 + ICMP.NBYTES_TIME])[0]
+
+            resp_time =  t_recv - t_send
+            return (seq, resp_time)
+
+        return None
 
 
 # class ICMP_Echo(ICMP):
@@ -216,23 +241,25 @@ class Pinger(Thread):
             logging.info("receive timeout occurred")
             return None
 
-        header = packet[20:28]
-        t_recv = default_timer()
+        seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
+        return resp_time
 
-        try:
-            header_decode = ICMP_Header( *(struct.unpack(Pinger.PROTO_STRUCT_FMT, header)) )
-            # type, code, checksum, id, seq = struct.unpack(Pinger.PROTO_STRUCT_FMT, header)
-        except struct.error as excpt:
-            logging.warning("invalid header was detected : {0}".format(str(header)))
-            return None
-
-        if header_decode.type == ICMP.ICMP_ECHO_REP and header_decode.id == self._id:
-            nbytes_time = struct.calcsize("d")
-            t_send = struct.unpack("d", packet[28:28 + nbytes_time])[0]
-
-            # assert t_send is not None, "send None"
-            # print "rt = " + str(t_recv - t_send)
-            return t_recv - t_send
+        # header = packet[20:28]
+        # t_recv = default_timer()
+        #
+        # try:
+        #     # header_decode = struct.unpack(ICMP.PROTO_STRUCT_FMT, header)
+        #     # header_decode = ICMP_Header( *(struct.unpack(Pinger.PROTO_STRUCT_FMT, header)) )
+        #     type, code, checksum, id, seq = struct.unpack(Pinger.PROTO_STRUCT_FMT, header)
+        # except struct.error as excpt:
+        #     logging.warning("invalid header was detected : {0}".format(str(header)))
+        #     return None
+        #
+        # if type == ICMP.ICMP_ECHO_REP and id == self._id:
+        #     nbytes_time = struct.calcsize("d")
+        #     t_send = struct.unpack("d", packet[28:28 + nbytes_time])[0]
+        #
+        #     return t_recv - t_send
 
     def _send_one(self, sock, addr_dst):
         # try:
@@ -243,7 +270,8 @@ class Pinger(Thread):
         #     self._targets.remove(name_dst)
         #     return
         seq = self._seqs[addr_dst]
-        packet = self._build_packet(seq)
+        packet = ICMP_Request.new_request(self._id, seq)
+        # packet = self._build_packet(seq)
         self._seqs[addr_dst] += 1
         # print packet
 
