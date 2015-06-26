@@ -11,7 +11,7 @@ import socket, struct, array
 import sys, os, time, logging
 
 from threading import Thread, Event
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from functools import wraps
 from contextlib import closing
 
@@ -35,7 +35,6 @@ class ICMP():
 
     def _checksum_wrapper(func):
 
-        # if struct.pack("H",1) == "\x00\x01": # big endian
         if sys.byteorder == "big":
 
             @wraps(func)
@@ -47,6 +46,7 @@ class ICMP():
                 s += s >> 16
                 s = ~s
                 return s & 0xffff
+
         else:
             @wraps(func)
             def _checksum_inner(cls, pkt):
@@ -79,7 +79,6 @@ class ICMP_Request(ICMP):
                                  ICMP_Request.ICMP_ECHO_REQ, 0, chsum, id, seq)
 
         t_send = default_timer()
-        # nbytes_t = struct.calcsize("d")
 
         data = (64 - ICMP.NBYTES_TIME) * "P"
         data = struct.pack("d", t_send) + data
@@ -115,52 +114,13 @@ class ICMP_Reply(ICMP):
         return None
 
 
-# class ICMP_Echo(ICMP):
-#
-#     def __init__(self, id, seq):
-#         super(ICMP_Echo, self).__init__(ICMP.ICMP_ECHO_REQ, 0, id, seq)
-#
-#     def _build_packet(self, id, seq):
-#
-#         chsum = 0
-#         header = struct.pack(ICMP.PROTO_STRUCT_FMT, *tuple(self) )
-#         # Temporary header whose checksum was set to 0
-#
-#         t_send = default_timer()
-#         nbytes_t = struct.calcsize("d")
-#         # nbytes_t = sys.getsizeof(t_send) / 8
-#         data = (64 - nbytes_t) * "P"
-#         data = struct.pack("d", t_send) + data
-#
-#         chsum = Pinger.checksum(header + data)
-#         header = struct.pack(Pinger.PROTO_STRUCT_FMT,
-#                                  Pinger.ICMP_ECHO_REQ, 0, chsum, self._id, seq)
-#         packet = header + data
-#
-#         return packet
-
-# req_header = struct.pack(Pinger.PROTO_STRUCT_FMT,
-#                                  Pinger.ICMP_ECHO_REQ, 0, chsum, self._id, seq)
-# header_decode = ICMP_Header_Tuple( *(struct.unpack(Pinger.PROTO_STRUCT_FMT, header)) )
-
-# class ICMP_Echo(ICMP_Header_Tuple):
-#
-#     def __repr__(self):
-#         return self._asdict()
-
-
 class Pinger(Thread):
-
-    # ICMP_ECHO_REQ = 0x08
-    # ICMP_ECHO_REP = 0x00
 
     MAX_TARGET = 5
     INTERVAL_PING = 1.0
     LEN_RECV = 1024
 
     PROTO_STRUCT_FMT = "!BBHHH"
-    # PROTO_CODE = socket.getprotobyname("icmp")
-    # ICMP_Header = namedtuple("ICMP_Header", ("type", "code", "checksum", "id", "seq"))
 
     def __init__(self, targets=[], timeout=3.0, is_receiver=False):
 
@@ -180,7 +140,6 @@ class Pinger(Thread):
         try:
             with closing(socket.socket(family=socket.AF_INET, type=socket.SOCK_RAW,
                                          proto=ICMP.PROTO_CODE) ) as sock:
-                # print sock
                 if not self._is_receiver:
                     self._work_on_myduty = self._send
 
@@ -190,7 +149,6 @@ class Pinger(Thread):
                 while True:
                     res = self._work_on_myduty(sock)
                     print res
-                    # print res, str(self._work_on_myduty)
 
                     if self._ev.is_set():
                         break
@@ -222,9 +180,8 @@ class Pinger(Thread):
         self._targets = dict( zip(targets, resolved) )
 
     def _send(self, sock):
-        # print str(self._targets)
-        results = []
 
+        results = []
         for target in self._targets.values():
             print target
             res = self._send_one(sock, target)
@@ -237,110 +194,31 @@ class Pinger(Thread):
 
         try:
             packet, addr_port = sock.recvfrom(Pinger.LEN_RECV)
+
         except socket.timeout as excpt:
             logging.info("receive timeout occurred")
             return None
 
         seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
-        return resp_time
+        addr, port = addr_port
 
-        # header = packet[20:28]
-        # t_recv = default_timer()
-        #
-        # try:
-        #     # header_decode = struct.unpack(ICMP.PROTO_STRUCT_FMT, header)
-        #     # header_decode = ICMP_Header( *(struct.unpack(Pinger.PROTO_STRUCT_FMT, header)) )
-        #     type, code, checksum, id, seq = struct.unpack(Pinger.PROTO_STRUCT_FMT, header)
-        # except struct.error as excpt:
-        #     logging.warning("invalid header was detected : {0}".format(str(header)))
-        #     return None
-        #
-        # if type == ICMP.ICMP_ECHO_REP and id == self._id:
-        #     nbytes_time = struct.calcsize("d")
-        #     t_send = struct.unpack("d", packet[28:28 + nbytes_time])[0]
-        #
-        #     return t_recv - t_send
+        return (addr, seq, resp_time)
+
 
     def _send_one(self, sock, addr_dst):
-        # try:
-        #     addr_dst = socket.gethostbyname(name_dst)
-        #
-        # except socket.gaierror as excpt:
-        #     logging.warning("{0} -> {1} is ignored".format(excpt.message, name_dst))
-        #     self._targets.remove(name_dst)
-        #     return
+
         seq = self._seqs[addr_dst]
         packet = ICMP_Request.new_request(self._id, seq)
-        # packet = self._build_packet(seq)
         self._seqs[addr_dst] += 1
-        # print packet
 
         try:
             len_send = sock.sendto(packet, (addr_dst, 0))
-            # print "sent " + str(len_send) + " packets"
 
         except socket.error as excpt:
             logging.error("failed to sending to {0}".format(addr_dst))
             raise excpt
 
-        # assert len_send is not None, "send None"
-        # print "len_send = " + str(len_send)
         return len_send
-
-    # def _recv_one(self):
-    #     pass
-
-    def _checksum_wrapper(func):
-
-        # if struct.pack("H",1) == "\x00\x01": # big endian
-        if sys.byteorder == "big":
-
-            @wraps(func)
-            def _checksum_inner(cls, pkt):
-                if len(pkt) % 2 == 1:
-                    pkt += "\0"
-                s = sum(array.array("H", pkt))
-                s = (s >> 16) + (s & 0xffff)
-                s += s >> 16
-                s = ~s
-                return s & 0xffff
-        else:
-            @wraps(func)
-            def _checksum_inner(cls, pkt):
-                if len(pkt) % 2 == 1:
-                    pkt += "\0"
-                s = sum(array.array("H", pkt))
-                s = (s >> 16) + (s & 0xffff)
-                s += s >> 16
-                s = ~s
-                return (((s>>8)&0xff)|s<<8) & 0xffff
-
-        return _checksum_inner
-
-    @classmethod
-    @_checksum_wrapper
-    def checksum(cls, pkt):
-        pass
-
-    def _build_packet(self, seq):
-
-        chsum = 0
-        req_header = struct.pack(Pinger.PROTO_STRUCT_FMT,
-                                 Pinger.ICMP_ECHO_REQ, 0, chsum, self._id, seq)
-        # Temporary header whose checksum was set to 0
-
-        t_send = default_timer()
-        nbytes_t = struct.calcsize("d")
-        # nbytes_t = sys.getsizeof(t_send) / 8
-        data = (64 - nbytes_t) * "P"
-        data = struct.pack("d", t_send) + data
-
-        chsum = Pinger.checksum(req_header + data)
-        req_header = struct.pack(Pinger.PROTO_STRUCT_FMT,
-                                 Pinger.ICMP_ECHO_REQ, 0, chsum, self._id, seq)
-        packet = req_header + data
-
-        return packet
 
 
 def main():
@@ -356,7 +234,6 @@ def main():
             raw_input()
 
     except KeyboardInterrupt as excpt:
-        # print(excpt)
 
         logging.info("Keyboard Interrupt occur. Program will exit.")
 
