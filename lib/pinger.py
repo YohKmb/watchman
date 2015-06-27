@@ -116,6 +116,16 @@ class ICMP_Reply(ICMP):
 
         return None
 
+class Result_Ping(namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))):
+
+    def __repr__(self):
+        return "addr={0}, seq={1}, response_time={2}".format( *tuple(self))
+
+    def as_record(self):
+        rec = self._asdict()
+        del(rec["addr"])
+
+        return dict(rec)
 
 # class Pinger(Process):
 class Pinger(Thread):
@@ -125,7 +135,7 @@ class Pinger(Thread):
     LEN_RECV = 1024
 
     PROTO_STRUCT_FMT = "!BBHHH"
-    Result_Ping = namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))
+    # Result_Ping = namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))
 
     def __init__(self, targets={}, timeout=3.0, is_receiver=False):
 
@@ -159,7 +169,8 @@ class Pinger(Thread):
                     #     print res
 
                     if res and self._is_receiver:
-                        self._results[res.addr].append(res)
+                        self._results[res.addr].append(res.as_record() )
+                        print res
 
                     if self._ev.is_set():
                         logging.info(str(current_thread()) + " got a signal for ending")
@@ -205,7 +216,8 @@ class Pinger(Thread):
             seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
             addr, port = addr_port
 
-            return self.Result_Ping(addr, seq, resp_time)
+            return Result_Ping(addr, seq, resp_time)
+            # return self.Result_Ping(addr, seq, resp_time)
 
         else:
             return None
@@ -292,13 +304,13 @@ def main():
         sys.exit(1)
 
     senders = Pinger.generate_senders(args.targets)
-    r1 = Pinger(is_receiver=True)
+    receiver = Pinger(is_receiver=True)
 
     try:
         for sender in senders:
             sender.start()
 
-        r1.start()
+        receiver.start()
 
         while True:
             raw_input()
@@ -310,12 +322,12 @@ def main():
         for sender in senders:
             sender.end()
 
-        r1.end()
+        receiver.end()
 
         for sender in senders:
             sender.join()
 
-        r1.join()
+        receiver.join()
 
         sys.exit(0)
 
