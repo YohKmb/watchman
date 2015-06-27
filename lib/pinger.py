@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 
-
 __author__ = "YohKmb <yoh134shonan@gmail.com"
 __status__ = "development"
 __version__ = "0.0.1"
@@ -9,8 +8,9 @@ __date__    = "July 2015"
 
 import socket, struct, array
 import sys, os, time, logging
+import argparse
 
-from threading import Thread, Event
+from threading import Thread, Event, current_thread
 from collections import defaultdict
 from functools import wraps
 from contextlib import closing
@@ -144,6 +144,7 @@ class Pinger(Thread):
                     self._work_on_myduty = self._send
 
                 else:
+                    sock.settimeout(self._timeout)
                     self._work_on_myduty = self._recv
 
                 while True:
@@ -151,6 +152,8 @@ class Pinger(Thread):
                     print res
 
                     if self._ev.is_set():
+                        logging.info(str(current_thread()) + " got a signal for ending")
+                        # print str(current_thread())
                         break
 
         except socket.error as excpt:
@@ -221,10 +224,32 @@ class Pinger(Thread):
         return len_send
 
 
+def get_parser():
+
+    desc = "pinger : an implementation of icmp utility with standard python libraries"
+    parser = argparse.ArgumentParser(description=desc)
+
+    parser.add_argument("targets", metavar="TARGET", type=str, nargs="*", help="targets to be pinged")
+    parser.add_argument("-f", "--file", dest="file", type=str, required=False, help="filepath to the file that lists ping targets")
+
+    return parser
+
+
+
 def main():
+
+    parser = get_parser()
+    args = parser.parse_args()
+
+    if args.file and args.targets:
+        logging.error(" please specify target either commandline argument or filepath\n")
+        parser.print_help()
+        sys.exit(1)
+
     s1 = Pinger()
     r1 = Pinger(is_receiver=True)
-    s1.targets = ["www.google.com", "www.kernel.org"]
+    s1.targets = args.targets
+    # s1.targets = ["www.google.com", "www.kernel.org"]
 
     try:
         s1.start()
