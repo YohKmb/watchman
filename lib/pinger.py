@@ -122,7 +122,7 @@ class Pinger(Thread):
 
     PROTO_STRUCT_FMT = "!BBHHH"
 
-    def __init__(self, targets=[], timeout=3.0, is_receiver=False):
+    def __init__(self, targets={}, timeout=3.0, is_receiver=False):
 
         super(Pinger, self).__init__()
 
@@ -170,24 +170,11 @@ class Pinger(Thread):
 
     @targets.setter
     def targets(self, targets):
-
-        resolved = []
-        for target in targets:
-            try:
-                addr_dst = socket.gethostbyname(target)
-                resolved.append(addr_dst)
-
-            except socket.gaierror as excpt:
-                logging.warning("{0} -> {1} is ignored".format(excpt.message, target))
-                targets.remove(target)
-
-        self._targets = dict( zip(targets, resolved) )
+        self._targets = targets
 
     def _send(self, sock):
-
         results = []
         for target in self._targets.values():
-            # print target
             res = self._send_one(sock, target)
             results.append(res)
 
@@ -225,6 +212,30 @@ class Pinger(Thread):
         return len_send
 
 
+def slice_lists(z, splited=[]):
+
+    if len(z) > 5:
+        splited.append(z[:5])
+        return slice_lists(z[5:], splited)
+
+    else:
+        splited.append(z)
+        return splited
+
+def resolve_name(targets):
+    resolved = []
+    for target in targets:
+        try:
+            addr_dst = socket.gethostbyname(target)
+            resolved.append(addr_dst)
+
+        except socket.gaierror as excpt:
+            logging.warning("{0} -> {1} is ignored".format(excpt.message, target))
+            targets.remove(target)
+
+    sliced_tuples = slice_lists(zip(targets, resolved))
+    return [dict(tup) for tup in sliced_tuples]
+
 def get_parser():
 
     desc = "pinger : an implementation of icmp utility with standard python libraries"
@@ -247,13 +258,18 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    s1 = Pinger()
+    grps_target = resolve_name(args.targets)
+    # print grps_target
+    senders = []
+    for grp in grps_target:
+        senders.append(Pinger(targets=grp) )
+
     r1 = Pinger(is_receiver=True)
-    s1.targets = args.targets
-    # s1.targets = ["www.google.com", "www.kernel.org"]
 
     try:
-        s1.start()
+        for sender in senders:
+            sender.start()
+
         r1.start()
 
         while True:
@@ -263,10 +279,14 @@ def main():
 
         logging.info("Keyboard Interrupt occur. Program will exit.")
 
-        s1.end()
+        for sender in senders:
+            sender.end()
+
         r1.end()
 
-        s1.join()
+        for sender in senders:
+            sender.join()
+
         r1.join()
 
         sys.exit(0)
