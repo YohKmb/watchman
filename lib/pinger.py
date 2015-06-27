@@ -223,16 +223,21 @@ def slice_lists(z, splited=[]):
         return splited
 
 def resolve_name(targets):
+
     resolved = []
+    removed = []
     for target in targets:
+        print target
         try:
             addr_dst = socket.gethostbyname(target)
+            # print str(target) + " = " + str(addr_dst)
             resolved.append(addr_dst)
 
         except socket.gaierror as excpt:
-            logging.warning("{0} -> {1} is ignored".format(excpt.message, target))
-            targets.remove(target)
+            logging.warning("fqdn {0} couldn't be resolved and is going to be ignored".format(target))
+            removed.append(target)
 
+    targets = [target for target in targets if target not in removed]
     sliced_tuples = slice_lists(zip(targets, resolved))
     return [dict(tup) for tup in sliced_tuples]
 
@@ -259,7 +264,8 @@ def main():
         sys.exit(1)
 
     grps_target = resolve_name(args.targets)
-    # print grps_target
+    print grps_target
+
     senders = []
     for grp in grps_target:
         senders.append(Pinger(targets=grp) )
