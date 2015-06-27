@@ -149,7 +149,8 @@ class Pinger(Thread):
 
                 while True:
                     res = self._work_on_myduty(sock)
-                    print res
+                    if res:
+                        print res
 
                     if self._ev.is_set():
                         logging.info(str(current_thread()) + " got a signal for ending")
@@ -186,7 +187,7 @@ class Pinger(Thread):
 
         results = []
         for target in self._targets.values():
-            print target
+            # print target
             res = self._send_one(sock, target)
             results.append(res)
 
