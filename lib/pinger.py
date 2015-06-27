@@ -1,6 +1,8 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 
-__author__ = "YohKmb <yoh134shonan@gmail.com"
+
+__author__ = "YohKmb <yoh134shonan@gmail.com>"
 __status__ = "development"
 __version__ = "0.0.1"
 __date__    = "July 2015"
@@ -11,7 +13,7 @@ import sys, os, time, logging
 import argparse
 
 from threading import Thread, Event, current_thread
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from functools import wraps
 from contextlib import closing
 
@@ -122,6 +124,8 @@ class Pinger(Thread):
 
     PROTO_STRUCT_FMT = "!BBHHH"
 
+    Result_Ping = namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))
+
     def __init__(self, targets={}, timeout=3.0, is_receiver=False):
 
         super(Pinger, self).__init__()
@@ -184,7 +188,7 @@ class Pinger(Thread):
     def _recv(self, sock):
 
         try:
-            packet, addr_port = sock.recvfrom(Pinger.LEN_RECV)
+            packet, addr_port = sock.recvfrom(self.LEN_RECV)
 
         except socket.timeout as excpt:
             logging.info("receive timeout occurred")
@@ -193,7 +197,7 @@ class Pinger(Thread):
         seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
         addr, port = addr_port
 
-        return (addr, seq, resp_time)
+        return self.Result_Ping(addr, seq, resp_time)
 
 
     def _send_one(self, sock, addr_dst):
@@ -211,35 +215,48 @@ class Pinger(Thread):
 
         return len_send
 
+    @classmethod
+    def _slice_lists(cls, z, splited=[]):
 
-def slice_lists(z, splited=[]):
+        if len(z) > 5:
+            splited.append(z[:5])
+            return cls._slice_lists(z[5:], splited)
 
-    if len(z) > 5:
-        splited.append(z[:5])
-        return slice_lists(z[5:], splited)
+        else:
+            splited.append(z)
+            return splited
 
-    else:
-        splited.append(z)
-        return splited
+    @classmethod
+    def _resolve_name(cls, targets):
 
-def resolve_name(targets):
+        resolved = []
+        removed = []
+        for target in targets:
+            print target
+            try:
+                addr_dst = socket.gethostbyname(target)
+                # print str(target) + " = " + str(addr_dst)
+                resolved.append(addr_dst)
 
-    resolved = []
-    removed = []
-    for target in targets:
-        print target
-        try:
-            addr_dst = socket.gethostbyname(target)
-            # print str(target) + " = " + str(addr_dst)
-            resolved.append(addr_dst)
+            except socket.gaierror as excpt:
+                logging.warning("fqdn {0} couldn't be resolved and is going to be ignored".format(target))
+                removed.append(target)
 
-        except socket.gaierror as excpt:
-            logging.warning("fqdn {0} couldn't be resolved and is going to be ignored".format(target))
-            removed.append(target)
+        targets = [target for target in targets if target not in removed]
+        sliced_tuples = cls._slice_lists(zip(targets, resolved))
+        return [dict(tup) for tup in sliced_tuples]
 
-    targets = [target for target in targets if target not in removed]
-    sliced_tuples = slice_lists(zip(targets, resolved))
-    return [dict(tup) for tup in sliced_tuples]
+    @classmethod
+    def generate_senders(cls, targets):
+        grps_target = cls._resolve_name(targets)
+
+        senders = []
+        for grp in grps_target:
+            senders.append(cls(targets=grp) )
+
+        return senders
+
+
 
 def get_parser():
 
@@ -263,13 +280,7 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    grps_target = resolve_name(args.targets)
-    print grps_target
-
-    senders = []
-    for grp in grps_target:
-        senders.append(Pinger(targets=grp) )
-
+    senders = Pinger.generate_senders(args.targets)
     r1 = Pinger(is_receiver=True)
 
     try:
