@@ -16,6 +16,7 @@ from threading import Thread, Event, current_thread
 from collections import defaultdict, namedtuple
 from functools import wraps
 from contextlib import closing
+# from multiprocessing import Process
 
 
 # choose an apppropriate timer module depending on the platform
@@ -116,6 +117,7 @@ class ICMP_Reply(ICMP):
         return None
 
 
+# class Pinger(Process):
 class Pinger(Thread):
 
     MAX_TARGET = 5
@@ -123,7 +125,6 @@ class Pinger(Thread):
     LEN_RECV = 1024
 
     PROTO_STRUCT_FMT = "!BBHHH"
-
     Result_Ping = namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))
 
     def __init__(self, targets={}, timeout=3.0, is_receiver=False):
@@ -131,35 +132,41 @@ class Pinger(Thread):
         super(Pinger, self).__init__()
 
         self._id = os.getpid() & 0xFFFF
+
         self._is_receiver = is_receiver
-        self._targets = targets
         self._timeout = timeout
-        self._seqs = defaultdict(lambda: 1)
+
+        if is_receiver:
+            self._results = defaultdict(lambda: [])
+            self._work_on_myduty = self._recv
+        else:
+            self._targets = targets
+            self._seqs = defaultdict(lambda: 1)
+            self._work_on_myduty = self._send
 
         self.daemon = True
         self._ev = Event()
 
     def run(self):
-
         try:
             with closing(socket.socket(family=socket.AF_INET, type=socket.SOCK_RAW,
                                          proto=ICMP.PROTO_CODE) ) as sock:
-                if not self._is_receiver:
-                    self._work_on_myduty = self._send
-
-                else:
-                    sock.settimeout(self._timeout)
-                    self._work_on_myduty = self._recv
+                sock.settimeout(self._timeout)
 
                 while True:
                     res = self._work_on_myduty(sock)
-                    if res:
-                        print res
+                    # if res:
+                    #     print res
+
+                    if res and self._is_receiver:
+                        self._results[res.addr].append(res)
 
                     if self._ev.is_set():
                         logging.info(str(current_thread()) + " got a signal for ending")
-                        # print str(current_thread())
                         break
+
+                if self._is_receiver:
+                    print self._results
 
         except socket.error as excpt:
             logging.error(excpt.__class__)
@@ -178,7 +185,7 @@ class Pinger(Thread):
 
     def _send(self, sock):
         results = []
-        for target in self._targets.values():
+        for target in self._targets.keys():
             res = self._send_one(sock, target)
             results.append(res)
 
@@ -192,12 +199,16 @@ class Pinger(Thread):
 
         except socket.timeout as excpt:
             logging.info("receive timeout occurred")
+            packet = None
+
+        if packet:
+            seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
+            addr, port = addr_port
+
+            return self.Result_Ping(addr, seq, resp_time)
+
+        else:
             return None
-
-        seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
-        addr, port = addr_port
-
-        return self.Result_Ping(addr, seq, resp_time)
 
 
     def _send_one(self, sock, addr_dst):
@@ -243,7 +254,8 @@ class Pinger(Thread):
                 removed.append(target)
 
         targets = [target for target in targets if target not in removed]
-        sliced_tuples = cls._slice_lists(zip(targets, resolved))
+        sliced_tuples = cls._slice_lists(zip(resolved, targets))
+        # sliced_tuples = cls._slice_lists(zip(targets, resolved))
         return [dict(tup) for tup in sliced_tuples]
 
     @classmethod
@@ -267,7 +279,6 @@ def get_parser():
     parser.add_argument("-f", "--file", dest="file", type=str, required=False, help="filepath to the file that lists ping targets")
 
     return parser
-
 
 
 def main():
