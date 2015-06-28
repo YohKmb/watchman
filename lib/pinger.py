@@ -3,16 +3,16 @@
 
 
 __author__ = "YohKmb <yoh134shonan@gmail.com>"
-__status__ = "development"
+__status__ = "developping"
 __version__ = "0.0.1"
-__date__    = "July 2015"
+__date__ = "July 2015"
 
 
 import socket, struct, array
 import sys, os, time, logging
 import argparse
 
-from threading import Thread, Event, current_thread
+from threading import Thread, Event, Lock, current_thread
 from collections import defaultdict, namedtuple
 from functools import wraps
 from contextlib import closing
@@ -116,7 +116,8 @@ class ICMP_Reply(ICMP):
 
         return None
 
-class Result_Ping(namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))):
+
+class ResultPing(namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))):
 
     def __repr__(self):
         return "addr={0}, seq={1}, response_time={2}".format( *tuple(self))
@@ -127,15 +128,29 @@ class Result_Ping(namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))):
 
         return dict(rec)
 
-# class Pinger(Process):
+
+class SafeDict(defaultdict):
+
+    def __init__(self, *args, **kwargs):
+        super(SafeDict, self).__init__(*args, **kwargs)
+        self._lock = Lock()
+
+    def __enter__(self):
+        self._lock.acquire()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._lock.release()
+
+
 class Pinger(Thread):
 
     MAX_TARGET = 5
     INTERVAL_PING = 1.0
     LEN_RECV = 1024
-
     PROTO_STRUCT_FMT = "!BBHHH"
-    # Result_Ping = namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))
+
+    seqs = SafeDict(lambda: 1)
 
     def __init__(self, targets={}, timeout=3.0, is_receiver=False):
 
@@ -151,7 +166,7 @@ class Pinger(Thread):
             self._work_on_myduty = self._recv
         else:
             self._targets = targets
-            self._seqs = defaultdict(lambda: 1)
+            # self._seqs = defaultdict(lambda: 1)
             self._work_on_myduty = self._send
 
         self.daemon = True
@@ -177,7 +192,14 @@ class Pinger(Thread):
                         break
 
                 if self._is_receiver:
-                    print self._results
+                    for target in self._results.keys():
+                        seq_recept = [res["seq"] for res in self._results[target]]
+                        missings = [seq for seq in xrange(1, Pinger.seqs[target] + 1) if seq not in seq_recept]
+
+                        if missings:
+                            print target + " : missing sequences = " + str(missings)
+
+                    # print self._results
 
         except socket.error as excpt:
             logging.error(excpt.__class__)
@@ -196,7 +218,7 @@ class Pinger(Thread):
 
     def _send(self, sock):
         results = []
-        for target in self._targets.keys():
+        for target in self.targets.keys():
             res = self._send_one(sock, target)
             results.append(res)
 
@@ -204,7 +226,6 @@ class Pinger(Thread):
         return results
 
     def _recv(self, sock):
-
         try:
             packet, addr_port = sock.recvfrom(self.LEN_RECV)
 
@@ -216,18 +237,20 @@ class Pinger(Thread):
             seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
             addr, port = addr_port
 
-            return Result_Ping(addr, seq, resp_time)
-            # return self.Result_Ping(addr, seq, resp_time)
+            return ResultPing(addr, seq, resp_time)
 
         else:
             return None
 
-
     def _send_one(self, sock, addr_dst):
 
-        seq = self._seqs[addr_dst]
+        with Pinger.seqs as seqs:
+            seq = seqs[addr_dst]
+            seqs[addr_dst] += 1
+
+        # seq = self._seqs[addr_dst]
         packet = ICMP_Request.new_request(self._id, seq)
-        self._seqs[addr_dst] += 1
+        # self._seqs[addr_dst] += 1
 
         try:
             len_send = sock.sendto(packet, (addr_dst, 0))
@@ -267,7 +290,7 @@ class Pinger(Thread):
 
         targets = [target for target in targets if target not in removed]
         sliced_tuples = cls._slice_lists(zip(resolved, targets))
-        # sliced_tuples = cls._slice_lists(zip(targets, resolved))
+
         return [dict(tup) for tup in sliced_tuples]
 
     @classmethod
@@ -291,7 +314,6 @@ def get_parser():
     parser.add_argument("-f", "--file", dest="file", type=str, required=False, help="filepath to the file that lists ping targets")
 
     return parser
-
 
 def main():
 
@@ -328,8 +350,7 @@ def main():
             sender.join()
 
         receiver.join()
-
-        sys.exit(0)
+        # sys.exit(0)
 
     logging.info("main program exits")
 
