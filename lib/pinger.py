@@ -72,7 +72,7 @@ class ICMP():
 class ICMP_Request(ICMP):
 
     @classmethod
-    def new_request(self, id, seq):
+    def new_request(cls, id, seq):
 
         # Temporary header whose checksum is set to 0
         chsum = 0
@@ -97,7 +97,7 @@ class ICMP_Request(ICMP):
 class ICMP_Reply(ICMP):
 
     @classmethod
-    def decode_packet(self, packet, id_sent):
+    def decode_packet(cls, packet, id_sent):
 
         header = packet[20:28]
         t_recv = default_timer()
@@ -192,9 +192,10 @@ class Pinger(Thread):
                         break
 
                 if self._is_receiver:
+                    print ""
                     for target in self._results.keys():
                         seq_recept = [res["seq"] for res in self._results[target]]
-                        missings = [seq for seq in xrange(1, Pinger.seqs[target] + 1) if seq not in seq_recept]
+                        missings = [seq for seq in xrange(1, self.__class__.seqs[target] + 1) if seq not in seq_recept]
 
                         if missings:
                             print target + " : missing sequences = " + str(missings)
@@ -229,22 +230,24 @@ class Pinger(Thread):
         try:
             packet, addr_port = sock.recvfrom(self.LEN_RECV)
 
+            if packet:
+                seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
+                addr, port = addr_port
+
+                return ResultPing(addr, seq, resp_time)
+
         except socket.timeout as excpt:
             logging.info("receive timeout occurred")
-            packet = None
+            # return None
+        except TypeError as excpt:
+            logging.info(excpt.message)
+            # print excpt.message
 
-        if packet:
-            seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
-            addr, port = addr_port
-
-            return ResultPing(addr, seq, resp_time)
-
-        else:
-            return None
+        return None
 
     def _send_one(self, sock, addr_dst):
 
-        with Pinger.seqs as seqs:
+        with self.__class__.seqs as seqs:
             seq = seqs[addr_dst]
             seqs[addr_dst] += 1
 
