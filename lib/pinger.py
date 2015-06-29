@@ -16,7 +16,7 @@ from threading import Thread, Event, Lock, current_thread
 from collections import defaultdict, namedtuple
 from functools import wraps
 from contextlib import closing
-# from multiprocessing import Process
+from multiprocessing import Manager
 
 
 # choose an apppropriate timer module depending on the platform
@@ -152,7 +152,7 @@ class Pinger(Thread):
 
     seqs = SafeDict(lambda: 1)
 
-    def __init__(self, targets={}, timeout=3.0, is_receiver=False):
+    def __init__(self, targets={}, timeout=3.0, is_receiver=False, mdict=None):
 
         super(Pinger, self).__init__()
 
@@ -164,6 +164,7 @@ class Pinger(Thread):
         if is_receiver:
             self._results = defaultdict(lambda: [])
             self._work_on_myduty = self._recv
+            self._mdict = mdict
         else:
             self._targets = targets
             # self._seqs = defaultdict(lambda: 1)
@@ -185,7 +186,11 @@ class Pinger(Thread):
 
                     if res and self._is_receiver:
                         self._results[res.addr].append(res.as_record() )
-                        print res
+                        if self._mdict.has_key(res.addr):
+                            self._mdict[res.addr] = []
+                        else:
+                            self._mdict[res.addr].append(res.as_record() )
+                        # print res
 
                     if self._ev.is_set():
                         logging.info(str(current_thread()) + " got a signal for ending")
@@ -199,8 +204,6 @@ class Pinger(Thread):
 
                         if missings:
                             print target + " : missing sequences = " + str(missings)
-
-                    # print self._results
 
         except socket.error as excpt:
             logging.error(excpt.__class__)
@@ -328,8 +331,11 @@ def main():
         parser.print_help()
         sys.exit(1)
 
+    mngr = Manager()
+    mdict = mngr.dict()
+
     senders = Pinger.generate_senders(args.targets)
-    receiver = Pinger(is_receiver=True)
+    receiver = Pinger(is_receiver=True, mdict=mdict)
 
     try:
         for sender in senders:
@@ -353,6 +359,9 @@ def main():
             sender.join()
 
         receiver.join()
+
+        print str(mdict.keys())
+        mngr.shutdown()
         # sys.exit(0)
 
     logging.info("main program exits")
