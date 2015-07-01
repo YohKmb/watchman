@@ -1,17 +1,20 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from flask import Flask, request, render_template, Response
+from flask import Flask, render_template, Response #, request
 import json
-# from functools import wraps
-from threading import Thread
+from threading import Thread, current_thread
 from Queue import Queue
 from random import randint
 from time import sleep
 
-q_thrds = None
+from lib import pinger
+# from lib.pinger import *
+
+senders, receiver = None, None
+# q_thrds = None
 # q_disp = []
-q_disp = {}
+# q_disp = {}
 
 
 class Queuinger(Thread):
@@ -22,6 +25,7 @@ class Queuinger(Thread):
         self.queue = Queue()
 
     def run(self):
+        # print "queue : " + str(current_thread() )
         while True:
             self.queue.put(randint(0, 9))
             sleep(randint(1, 3))
@@ -35,6 +39,11 @@ class Queuinger(Thread):
 
 
 app = Flask(__name__)
+
+
+@app.route("/history")
+def history():
+    return Response(json.dumps(receiver.history.keys() ))
 
 
 @app.route("/queues")
@@ -65,6 +74,7 @@ def main_page():
 
 @app.route("/test")
 def test():
+    # print "app : " + str(current_thread() )
     return render_template("test2.html")
 
 
@@ -87,18 +97,44 @@ def test():
 # def rotate_queue():
 #     pass
 
-def start_queuing():
-    thrds = {}
-
-    for i in xrange(3):
-        thrd = Queuinger()
-        thrds[i] = thrd
-        q_disp[i] = {"name": i, "results": []}
-        thrd.start()
-
-    return thrds
+# def start_queuing():
+#     thrds = {}
+#
+#     for i in xrange(3):
+#         thrd = Queuinger()
+#         thrds[i] = thrd
+#         q_disp[i] = {"name": i, "results": []}
+#         thrd.start()
+#
+#     return thrds
 
 
 if __name__ == "__main__":
-    q_thrds = start_queuing()
-    app.run(debug=True)
+    # print "main : " + str(current_thread() )
+    # q_thrds = start_queuing()
+    senders, receiver = pinger.generate_pingers(is_main=False, targets=["www.kernel.org", "web.mit.edu"])
+
+    try:
+        for sender in senders:
+            sender.start()
+
+        receiver.start()
+
+        app.run(debug=True)
+
+        while True:
+            raw_input()
+
+    except KeyboardInterrupt as excpt:
+
+        for sender in senders:
+            sender.end()
+
+        receiver.end()
+
+        for sender in senders:
+            sender.join()
+
+        receiver.join()
+
+

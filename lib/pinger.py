@@ -163,8 +163,9 @@ class Pinger(Thread):
 
         if is_receiver:
             # self._results = defaultdict(lambda: [])
-            self._history = defaultdict(lambda: deque(maxlen=20))
+            self._history = SafeDict(lambda: deque(maxlen=20))
             self._work_on_myduty = self._recv
+            self._lock = Lock()
         else:
             self._targets = targets
             # self._seqs = defaultdict(lambda: 1)
@@ -205,7 +206,8 @@ class Pinger(Thread):
         print ""
 
         if self._is_receiver:
-            print str(self._history )
+            with self._history as history:
+                print str(history)
         # if self._is_receiver:
         #     print ""
         #     for target in self._history.keys():
@@ -214,6 +216,20 @@ class Pinger(Thread):
         #
         #         if missings:
         #             print target + " : missing sequences = " + str(missings)
+
+
+    @property
+    def history(self):
+        with self._history as history:
+            return history
+    #
+    # @history.setter
+    # def history(self, k, v):
+    #     pass
+
+    # def get_histries(self):
+    #     with self._lock:
+    #         return self._history
 
     @property
     def targets(self):
@@ -241,7 +257,9 @@ class Pinger(Thread):
                 addr, port = addr_port
                 res = ResultPing(addr, seq, resp_time)
 
-                self._history[res.addr].append(res.as_record() )
+                with self._history as history:
+                    history[res.addr].append(res.as_record() )
+
                 print res
                 return res
                 # return ResultPing(addr, seq, resp_time)
@@ -328,7 +346,7 @@ def get_parser():
 
     return parser
 
-def main():
+def generate_pingers(targets=[]):
 
     parser = get_parser()
     args = parser.parse_args()
@@ -338,9 +356,14 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    senders = Pinger.generate_senders(args.targets)
+    targets = args.targets
+
+    senders = Pinger.generate_senders(targets)
     receiver = Pinger(is_receiver=True)
 
+    return senders, receiver
+
+def main(senders, receiver):
     try:
         for sender in senders:
             sender.start()
@@ -351,7 +374,6 @@ def main():
             raw_input()
 
     except KeyboardInterrupt as excpt:
-
         logging.info("Keyboard Interrupt occur. Program will exit.")
 
         for sender in senders:
@@ -363,10 +385,12 @@ def main():
             sender.join()
 
         receiver.join()
-        # sys.exit(0)
 
     logging.info("main program exits")
+    return None
 
 
 if __name__ == "__main__":
-    main()
+    senders, receiver = generate_pingers()
+    main(senders, receiver)
+
