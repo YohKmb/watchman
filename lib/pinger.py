@@ -348,29 +348,30 @@ def get_parser():
 
 def generate_pingers(targets=[]):
 
-    parser = get_parser()
-    args = parser.parse_args()
+    if not targets:
+        parser = get_parser()
+        args = parser.parse_args()
 
-    if args.file and args.targets:
-        logging.error(" please specify target either commandline argument or filepath\n")
-        parser.print_help()
-        sys.exit(1)
+        if args.file and args.targets:
+            logging.error(" please specify target either commandline argument or filepath\n")
+            parser.print_help()
+            sys.exit(1)
 
-    targets = args.targets
+        targets = args.targets
 
     senders = Pinger.generate_senders(targets)
     receiver = Pinger(is_receiver=True)
 
     return senders, receiver
 
-def main(senders, receiver):
+def start_pingers(senders, receiver, is_fg=True):
     try:
         for sender in senders:
             sender.start()
 
         receiver.start()
 
-        while True:
+        while is_fg:
             raw_input()
 
     except KeyboardInterrupt as excpt:
@@ -386,11 +387,11 @@ def main(senders, receiver):
 
         receiver.join()
 
-    logging.info("main program exits")
+    logging.info("pingers started")
     return None
 
 
 if __name__ == "__main__":
     senders, receiver = generate_pingers()
-    main(senders, receiver)
+    start_pingers(senders, receiver, is_fg=True)
 
