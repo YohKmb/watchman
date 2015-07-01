@@ -13,10 +13,10 @@ import sys, os, time, logging
 import argparse
 
 from threading import Thread, Event, Lock, current_thread
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, deque
 from functools import wraps
 from contextlib import closing
-from multiprocessing import Manager
+# from multiprocessing import Process
 
 
 # choose an apppropriate timer module depending on the platform
@@ -72,7 +72,7 @@ class ICMP():
 class ICMP_Request(ICMP):
 
     @classmethod
-    def new_request(self, id, seq):
+    def new_request(cls, id, seq):
 
         # Temporary header whose checksum is set to 0
         chsum = 0
@@ -97,7 +97,7 @@ class ICMP_Request(ICMP):
 class ICMP_Reply(ICMP):
 
     @classmethod
-    def decode_packet(self, packet, id_sent):
+    def decode_packet(cls, packet, id_sent):
 
         header = packet[20:28]
         t_recv = default_timer()
@@ -152,7 +152,7 @@ class Pinger(Thread):
 
     seqs = SafeDict(lambda: 1)
 
-    def __init__(self, targets={}, timeout=3.0, is_receiver=False, mdict=None):
+    def __init__(self, targets={}, timeout=3.0, is_receiver=False):
 
         super(Pinger, self).__init__()
 
@@ -162,9 +162,9 @@ class Pinger(Thread):
         self._timeout = timeout
 
         if is_receiver:
-            self._results = defaultdict(lambda: [])
+            # self._results = defaultdict(lambda: [])
+            self._history = defaultdict(lambda: deque(maxlen=20))
             self._work_on_myduty = self._recv
-            self._mdict = mdict
         else:
             self._targets = targets
             # self._seqs = defaultdict(lambda: 1)
@@ -184,25 +184,15 @@ class Pinger(Thread):
                     # if res:
                     #     print res
 
-                    if res and self._is_receiver:
-                        self._results[res.addr].append(res.as_record() )
-                        if self._mdict.has_key(res.addr):
-                            self._mdict[res.addr] = []
-                        else:
-                            self._mdict[res.addr].append(res.as_record() )
-                        # print res
+                    # if res and self._is_receiver:
+                    #     self._results[res.addr].append(res.as_record() )
+                    #     print res
 
                     if self._ev.is_set():
                         logging.info(str(current_thread()) + " got a signal for ending")
                         break
 
-                if self._is_receiver:
-                    for target in self._results.keys():
-                        seq_recept = [res["seq"] for res in self._results[target]]
-                        missings = [seq for seq in xrange(1, Pinger.seqs[target] + 1) if seq not in seq_recept]
-
-                        if missings:
-                            print target + " : missing sequences = " + str(missings)
+                self._post_loop()
 
         except socket.error as excpt:
             logging.error(excpt.__class__)
@@ -210,6 +200,20 @@ class Pinger(Thread):
 
     def end(self):
         self._ev.set()
+
+    def _post_loop(self):
+        print ""
+
+        if self._is_receiver:
+            print str(self._history )
+        # if self._is_receiver:
+        #     print ""
+        #     for target in self._history.keys():
+        #         seq_recept = [res["seq"] for res in self._history[target]]
+        #         missings = [seq for seq in xrange(1, self.__class__.seqs[target] + 1) if seq not in seq_recept]
+        #
+        #         if missings:
+        #             print target + " : missing sequences = " + str(missings)
 
     @property
     def targets(self):
@@ -232,22 +236,28 @@ class Pinger(Thread):
         try:
             packet, addr_port = sock.recvfrom(self.LEN_RECV)
 
+            if packet:
+                seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
+                addr, port = addr_port
+                res = ResultPing(addr, seq, resp_time)
+
+                self._history[res.addr].append(res.as_record() )
+                print res
+                return res
+                # return ResultPing(addr, seq, resp_time)
+
         except socket.timeout as excpt:
             logging.info("receive timeout occurred")
-            packet = None
+            # return None
+        except TypeError as excpt:
+            logging.info(excpt.message)
+            # print excpt.message
 
-        if packet:
-            seq, resp_time = ICMP_Reply.decode_packet(packet, self._id)
-            addr, port = addr_port
-
-            return ResultPing(addr, seq, resp_time)
-
-        else:
-            return None
+        return None
 
     def _send_one(self, sock, addr_dst):
 
-        with Pinger.seqs as seqs:
+        with self.__class__.seqs as seqs:
             seq = seqs[addr_dst]
             seqs[addr_dst] += 1
 
@@ -328,11 +338,8 @@ def main():
         parser.print_help()
         sys.exit(1)
 
-    mngr = Manager()
-    mdict = mngr.dict()
-
     senders = Pinger.generate_senders(args.targets)
-    receiver = Pinger(is_receiver=True, mdict=mdict)
+    receiver = Pinger(is_receiver=True)
 
     try:
         for sender in senders:
@@ -356,9 +363,6 @@ def main():
             sender.join()
 
         receiver.join()
-
-        print str(mdict.keys())
-        mngr.shutdown()
         # sys.exit(0)
 
     logging.info("main program exits")

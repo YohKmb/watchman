@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block post_body %}
+    <script type="text/javascript">
+
+        var box_hei = 80,
+                box_wid = 600;
+
+        var render = function() {
+            d3.json("http://localhost:5000/queues", function(jdata) {
+
+                d3.select("div.page").selectAll("div.box")
+                        .data(jdata)
+                        .enter()
+                        .append("div").attr("class", "box")
+                        .attr("id", get_name)
+                        .style("width", box_wid + "px").style("height", box_hei + "px");
+//                        .style("position", "absolute");
+//                        .style("position", "absolute").style("bottom", 0);
+
+                d3.select("div.page").selectAll("div.box")
+                        .data(jdata)
+                        .exit()
+                        .remove();
+
+                for (var res in jdata) {
+
+                    var box = d3.select("div.page div.box[id='" + res + "']");
+
+                    d3.select("div.page div.box[id='" + res + "']").selectAll("div.v-bar")
+                            .data(jdata[res]["results"]).enter()
+                            .append("div").attr("class", "v-bar")
+//                            .style("position", "absolute").style("bottom", box_hei)
+                            .append("span");
+
+                    d3.select("div.page div.box[id='" + res + "']").selectAll("div.v-bar")
+                            .data(jdata[res]["results"]).exit()
+                            .remove();
+
+                    d3.select("div.page div.box[id='" + res + "']").selectAll("div.v-bar")
+                            .data(jdata[res]["results"])
+                            .attr("class", "v-bar").style("height", get_hei);
+//                            .style("position", "absolute").style("bottom", 0);
+                };
+            });
+        };
+
+        var get_name = function(d){
+            return d["name"];
+        };
+
+        var get_hei = function(d){
+            return (d * 5) + "px";
+        };
+
+        setInterval(render, 1000);
+
+    </script>
+{% endblock %}
