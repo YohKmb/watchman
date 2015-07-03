@@ -30,7 +30,9 @@ def test():
 if __name__ == "__main__":
     # print "main : " + str(current_thread() )
     senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu"])
-    pinger.start_pingers(senders, receiver, is_fg=False)
-    app.run(debug=True)
-
+    try:
+        pinger.start_pingers(senders, receiver, is_fg=False)
+        app.run(debug=True)
+    finally:
+        pinger.stop_pingers(senders, receiver)
 

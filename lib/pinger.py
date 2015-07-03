@@ -375,20 +375,24 @@ def start_pingers(senders, receiver, is_fg=True):
             raw_input()
 
     except KeyboardInterrupt as excpt:
+
         logging.info("Keyboard Interrupt occur. Program will exit.")
+        stop_pingers(senders, receiver)
+
+    logging.info("pingers started")
+    return None
+
+def stop_pingers(senders, receiver):
 
         for sender in senders:
             sender.end()
-
         receiver.end()
 
         for sender in senders:
             sender.join()
-
         receiver.join()
 
-    logging.info("pingers started")
-    return None
+        return None
 
 
 if __name__ == "__main__":
