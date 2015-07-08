@@ -77,7 +77,7 @@ button {
     color: #f0f8ff;
     text-align: center;
     width: 10px;
-    display: inline-block;
+    display: block;isplay: inline-block;
 }
 
 .baseline {
