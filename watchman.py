@@ -4,6 +4,7 @@
 from flask import Flask, render_template, Response #, request
 import json
 from lib import pinger
+from threading import current_thread
 
 
 app = Flask(__name__)
@@ -12,7 +13,10 @@ senders, receiver = None, None
 
 @app.route("/history")
 def history():
-    return Response(json.dumps(receiver.history.keys() ))
+    hists = receiver.history
+    return Response(json.dumps(
+        [{"host":k, "history":list(v)} for k,v in hists.items() ]
+    ))
 
 
 @app.route("/main")
@@ -28,11 +32,16 @@ def test():
 
 
 if __name__ == "__main__":
-    # print "main : " + str(current_thread() )
+    print "main : " + str(current_thread() )
+
     senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu"])
+    print "senders = " + str(senders)
+    print "receiver = " + str(receiver)
+
     try:
         pinger.start_pingers(senders, receiver, is_fg=False)
-        app.run(debug=True)
+        app.run(debug=False)
+        # app.run(debug=True)
     finally:
         pinger.stop_pingers(senders, receiver)
 
