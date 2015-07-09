@@ -936,7 +936,7 @@ td, th {
 }
 
 .v-bar {
-    min-height: 1px;
+    min-height: 10px;
     min-width: 25px;
     background-color: #7783d7;
     /*margin-right: 2px;*/
@@ -949,8 +949,8 @@ td, th {
     position: absolute;
     bottom: 0px;
     float: right;
-    margin-left: 2px;
-    margin-right: 2px;
+    /*margin-left: 2px;*/
+    /*margin-right: 2px;*/
     /*padding: 1px;*/
     /*left: 0;*/
 }
@@ -962,7 +962,8 @@ td, th {
     float: left;
     text-align: center;
     border: #969696 solid 2px;
-    padding: 5px;
+    padding: 0px;
+    /*padding: 5px;*/
     position: relative;
     /*horiz-align: left;*/
     /*bottom: 0;*/

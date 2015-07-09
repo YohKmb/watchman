@@ -116,10 +116,10 @@ class ICMP_Reply(ICMP):
         return None
 
 
-class ResultPing(namedtuple("Resut_Ping", ("addr", "seq", "resp_t"))):
+class ResultPing(namedtuple("Resut_Ping", ("addr", "seq", "rtt"))):
 
     def __repr__(self):
-        return "addr={0}, seq={1}, response_time={2}".format( *tuple(self))
+        return "addr={0}, seq={1}, rtt={2}".format( *tuple(self))
 
     def as_record(self):
         rec = self._asdict()
