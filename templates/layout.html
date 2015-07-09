@@ -7,16 +7,50 @@
           content="Graphical ICMP monitoring tool inspired by 'deadman' tool">
 
     <title>Watchman</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='pure-min-custum.css') }}">
-        <!--<link rel=stylesheet type=text/css href="{{ url_for('static', filename='styles.css') }}">-->
-        <script type="text/javascript" src="{{ url_for('static', filename='d3.js') }}"></script>
-        <!--<script type="text/javascript" src="{{ url_for('static', filename='jquery-1.7.2.min.js') }}"></script>-->
-    </head>
-    <body>
-        <div class=page>
-          <h1>Watchman</h1><br/>
-          <!--{% block body %}{% endblock %}-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='pure-min-custum.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='side-menu.css') }}">
+
+    <script type="text/javascript" src="{{ url_for('static', filename='d3.js') }}"></script>
+</head>
+<body>
+<div id="layout">
+    <!-- Menu toggle -->
+    <a href="#menu" id="menuLink" class="menu-link">
+        <!-- Hamburger icon -->
+        <span></span>
+    </a>
+
+    <div id="menu">
+        <div class="pure-menu">
+            <a class="pure-menu-heading" href="#">Menu</a>
+
+            <ul class="pure-menu-list">
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">Overview</a></li>
+                <li class="pure-menu-item"><a href="#" class="pure-menu-link">Configuration</a></li>
+            </ul>
         </div>
-    </body>
-    {% block post_body %}{% endblock %}
+    </div>
+
+    <div id="main">
+        <div class="header">
+            <h1>Watchman</h1>
+
+            <h2>Graphical ICMP Monitoring Tool</h2>
+
+            <figure>
+                <div class="pure-u-1-8">
+                    <img class="pure-img-responsive" src="{{ url_for('static', filename='nightawl_min.png') }}"
+                         alt="nightawl">
+                </div>
+            </figure>
+        </div>
+
+        <div class="content">
+            {% block body %}{% endblock %}
+        </div>
+
+    </div>
+</div>
+</body>
+{% block post_body %}{% endblock %}
 </html>

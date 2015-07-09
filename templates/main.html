@@ -7,41 +7,45 @@
 
     var render = function () {
         d3.json("http://localhost:5000/history", function (jdata) {
+            var selec_box = d3.select("div.content").selectAll("div.box");
 
-//                var b_id = "addr_" + res;//.replace(/\./g, "");
-
-            d3.select("div.page").selectAll("div.box")
+//            d3.select("div.page").selectAll("div.box")
+            selec_box
                     .data(jdata)
                     .enter()
                     .append("div").attr("class", "box")
                     .attr("id", get_hostname)
                     .style("width", box_wid + "px").style("height", box_hei + "px");
 
-            d3.select("div.page").selectAll("div.box")
+//            d3.select("div.page").selectAll("div.box")
+            selec_box
                     .data(jdata)
                     .exit()
                     .remove();
-//            }
-//
-//            for (var res in jdata) {
-//                var b_id = "addr_" + res;//.replace(/\./g, "");
+
             for (var res in jdata) {
-                d3.select("div.page div.box[id='" + jdata[res]["host"] + "']").selectAll("div.v-bar")
-                        .data(jdata[res]["history"]).enter()
+                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+                        .selectAll("div.v-bar");
+
+//                d3.select("div.page div.box[id='" + jdata[res]["host"] + "']").selectAll("div.v-bar")
+                selec_box
+                        .data(jdata[res]["history"])
+                        .enter()
                         .append("div").attr("class", "v-bar")
                         .append("span");
 
-                d3.select("div.page div.box[id='" + jdata[res]["host"] + "']").selectAll("div.v-bar")
-                        .data(jdata[res]["history"]).exit()
+//                d3.select("div.page div.box[id='" + jdata[res]["host"] + "']").selectAll("div.v-bar")
+                selec_box
+                        .data(jdata[res]["history"])
+                        .exit()
                         .remove();
 
-                d3.select("div.page div.box[id='" + jdata[res]["host"] + "']").selectAll("div.v-bar")
+//                d3.select("div.page div.box[id='" + jdata[res]["host"] + "']").selectAll("div.v-bar")
+                selec_box
                         .data(jdata[res]["history"])
                         .attr("class", "v-bar").style("height", get_hei).style("left", function(d, i) {
                             return (2 + i * 27) + "px";
                         });
-//                        .style("left", 100);
-//                            .style("position", "absolute").style("bottom", 0);
             }
         });
     };
@@ -53,13 +57,6 @@
     var get_hei = function (d) {
         return (d["resp_t"] * 100) + "px";
     };
-
-//    var get_min_seq = function(d) {
-//        return min(d);
-//    };
-//    var get_left_offset = function(darray, d) {
-//        return (darray.indexOf(d) * 15) + "px";
-//    };
 
     render();
     setInterval(render, 2000);
