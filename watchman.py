@@ -4,11 +4,16 @@
 
 from flask import Flask, render_template, Response
 import json
+
+# from __future__ import division
+
 from lib import pinger
 
 
 app = Flask(__name__)
 senders, receiver = None, None
+
+scale_bar = 10
 
 
 @app.route("/history")
@@ -20,11 +25,12 @@ def history():
 
 @app.route("/main")
 def main_page():
-    return render_template("main.html")
+    return render_template("main.html", scale_bar=scale_bar)
 
 
 if __name__ == "__main__":
-    senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu"])
+    senders, receiver = pinger.generate_pingers(targets=["localhost"])
+    # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu"])
 
     try:
         pinger.start_pingers(senders, receiver, is_fg=False)

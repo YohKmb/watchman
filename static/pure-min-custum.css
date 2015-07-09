@@ -949,6 +949,9 @@ td, th {
     position: absolute;
     bottom: 0px;
     float: right;
+    margin-left: 2px;
+    margin-right: 2px;
+    /*padding: 1px;*/
     /*left: 0;*/
 }
 

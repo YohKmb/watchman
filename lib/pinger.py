@@ -16,7 +16,6 @@ from threading import Thread, Event, Lock, current_thread
 from collections import defaultdict, namedtuple, deque
 from functools import wraps
 from contextlib import closing
-# from multiprocessing import Process
 
 
 # choose an apppropriate timer module depending on the platform
@@ -152,7 +151,7 @@ class Pinger(Thread):
 
     seqs = SafeDict(lambda: 1)
 
-    def __init__(self, targets={}, timeout=3.0, is_receiver=False):
+    def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False):
 
         super(Pinger, self).__init__()
 
@@ -160,6 +159,7 @@ class Pinger(Thread):
 
         self._is_receiver = is_receiver
         self._timeout = timeout
+        self._intv_ping = intv_ping
 
         if is_receiver:
             # self._results = defaultdict(lambda: [])
@@ -208,28 +208,11 @@ class Pinger(Thread):
         if self._is_receiver:
             with self._history as history:
                 print str(history)
-        # if self._is_receiver:
-        #     print ""
-        #     for target in self._history.keys():
-        #         seq_recept = [res["seq"] for res in self._history[target]]
-        #         missings = [seq for seq in xrange(1, self.__class__.seqs[target] + 1) if seq not in seq_recept]
-        #
-        #         if missings:
-        #             print target + " : missing sequences = " + str(missings)
-
 
     @property
     def history(self):
         with self._history as history:
             return history
-    #
-    # @history.setter
-    # def history(self, k, v):
-    #     pass
-
-    # def get_histries(self):
-    #     with self._lock:
-    #         return self._history
 
     @property
     def targets(self):
@@ -245,7 +228,8 @@ class Pinger(Thread):
             res = self._send_one(sock, target)
             results.append(res)
 
-        time.sleep(1.0)
+        time.sleep(self._intv_ping)
+        # time.sleep(1.0)
         return results
 
     def _recv(self, sock):
