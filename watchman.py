@@ -21,7 +21,7 @@ def history():
 
 @app.route("/main")
 def main_page():
-    return render_template("queue.html")
+    return render_template("main.html")
 
 
 
