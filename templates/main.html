@@ -36,8 +36,11 @@
                 selec_box
                         .data(jdata[res]["history"])
                         .enter()
-                        .append("div").attr("class", "v-bar")
+                        .append("div")
+                        .attr("class", "v-bar")
+                        .style("visibility", "hidden")
                         .append("span");
+//                        .text(get_seq);
 
                 selec_box
                         .data(jdata[res]["history"])
@@ -46,9 +49,14 @@
 
                 selec_box
                         .data(jdata[res]["history"])
-                        .attr("class", "v-bar").style("height", get_hei).style("left", function(d, i) {
-                            return (2 + i * 27) + "px";
-                        });
+                        .attr("class", "v-bar")
+                        .style("height", get_hei)
+                        .style("left", function (d, i) {
+                            return (2 + i * 27) + "px"
+                        })
+                        .style("visibility", "visible")
+                        .select("span")
+                        .text(get_seq);
             }
         });
     };
@@ -57,12 +65,20 @@
         return d["host"];
     };
 
-    var get_hei = function (d) {
-        return (d["rtt"] * 100) + "px";
+    var get_rtt = function (d) {
+        return d["rtt"];
     };
 
-    render();
+    var get_seq = function (d) {
+        return d["seq"];
+    };
+
+    var get_hei = function (d) {
+        return (get_rtt(d) * 100) + "px";
+    };
+
     setInterval(render, 2000);
+    render();
 
 </script>
 {% endblock %}
