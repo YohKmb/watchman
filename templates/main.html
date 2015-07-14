@@ -56,6 +56,7 @@
                         .style("left", function (d, i) {
                             return (2 + i * 27) + "px"
                         })
+                        .style("background-color", get_color)
                         .style("visibility", "visible")
                         .select("span")
                         .text(get_seq);
@@ -77,6 +78,13 @@
 
     var get_hei = function (d) {
         return (get_rtt(d) * 100) + "px";
+    };
+
+    var get_color = function(d) {
+        if (d["rtt"] == const_timeout) {
+            return "#9E446B"
+        };
+        return "#7783d7";
     };
 
     setInterval(render, 2000);
