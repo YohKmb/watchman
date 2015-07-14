@@ -17,6 +17,8 @@ from collections import defaultdict, namedtuple, deque
 from functools import wraps
 from contextlib import closing
 
+# import pickle
+
 
 # choose an apppropriate timer module depending on the platform
 if sys.platform == "win32":
@@ -25,7 +27,7 @@ else:
     default_timer = time.time
 
 
-class ICMP():
+class ICMP(object):
 
     ICMP_ECHO_REQ = 0x08
     ICMP_ECHO_REP = 0x00
@@ -34,6 +36,10 @@ class ICMP():
     PROTO_CODE = socket.getprotobyname("icmp")
 
     NBYTES_TIME = struct.calcsize("d")
+
+    # def __init__(self):
+    #     super(ICMP, self).__init__()
+    #     return self
 
     def _checksum_wrapper(func):
 
@@ -69,9 +75,42 @@ class ICMP():
 
 
 class ICMP_Request(ICMP):
+    
+    def __init__(self, id, seq, t_send):
+        super(ICMP_Request, self).__init__()
+        
+        # Temporary header whose checksum is set to 0
+        chsum = 0
+
+        req_header = struct.pack(ICMP_Request.PROTO_STRUCT_FMT,
+                                 ICMP_Request.ICMP_ECHO_REQ, 0, chsum, id, seq)
+
+        data = (64 - ICMP.NBYTES_TIME) * "P"
+        data = struct.pack("d", t_send) + data
+
+        chsum = ICMP.checksum(req_header + data)
+        req_header = struct.pack(ICMP.PROTO_STRUCT_FMT,
+                                 ICMP.ICMP_ECHO_REQ, 0, chsum, id, seq)
+        packet = req_header + data
+
+        self._packet = packet
+        self._time = t_send
+
+    def __repr__(self):
+        # print "repr"
+        return self._packet
+
+    # def __str__(self):
+    #     print "str"
+    #     return  self._packet
+    #     # return pickle.dump(self._packet)
+
+    @property
+    def time(self):
+        return self._time
 
     @classmethod
-    def new_request(cls, id, seq):
+    def new_request(cls, id, seq, t_send):
 
         # Temporary header whose checksum is set to 0
         chsum = 0
@@ -80,7 +119,7 @@ class ICMP_Request(ICMP):
         req_header = struct.pack(ICMP_Request.PROTO_STRUCT_FMT,
                                  ICMP_Request.ICMP_ECHO_REQ, 0, chsum, id, seq)
 
-        t_send = default_timer()
+        # t_send = default_timer()
 
         data = (64 - ICMP.NBYTES_TIME) * "P"
         data = struct.pack("d", t_send) + data
@@ -118,6 +157,8 @@ class ICMP_Reply(ICMP):
 
 class ResultPing(namedtuple("Resut_Ping", ("addr", "seq", "rtt"))):
 
+    TIMEOUT = -0x01
+
     def __repr__(self):
         return "addr={0}, seq={1}, rtt={2}".format( *tuple(self))
 
@@ -150,6 +191,9 @@ class Pinger(Thread):
     PROTO_STRUCT_FMT = "!BBHHH"
 
     seqs = SafeDict(lambda: 1)
+    queue = SafeDict(lambda: {})
+
+    _history = SafeDict(lambda: deque(maxlen=20))
 
     def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False):
 
@@ -163,7 +207,7 @@ class Pinger(Thread):
 
         if is_receiver:
             # self._results = defaultdict(lambda: [])
-            self._history = SafeDict(lambda: deque(maxlen=20))
+            # self._history = SafeDict(lambda: deque(maxlen=20))
             self._work_on_myduty = self._recv
             self._lock = Lock()
         else:
@@ -182,12 +226,6 @@ class Pinger(Thread):
 
                 while True:
                     res = self._work_on_myduty(sock)
-                    # if res:
-                    #     print res
-
-                    # if res and self._is_receiver:
-                    #     self._results[res.addr].append(res.as_record() )
-                    #     print res
 
                     if self._ev.is_set():
                         logging.info(str(current_thread()) + " got a signal for ending")
@@ -211,6 +249,7 @@ class Pinger(Thread):
 
     @property
     def history(self):
+        print self.__class__.__dict__
         with self._history as history:
             return history
 
@@ -244,13 +283,17 @@ class Pinger(Thread):
                 with self._history as history:
                     history[res.addr].append(res.as_record() )
 
+                with self.__class__.queue as queue:
+                    del queue[addr]
+                    # print queue
+
                 print res
                 return res
                 # return ResultPing(addr, seq, resp_time)
 
         except socket.timeout as excpt:
             logging.info("receive timeout occurred")
-            # return None
+
         except TypeError as excpt:
             logging.info(excpt.message)
             # print excpt.message
@@ -264,11 +307,29 @@ class Pinger(Thread):
             seqs[addr_dst] += 1
 
         # seq = self._seqs[addr_dst]
-        packet = ICMP_Request.new_request(self._id, seq)
+        t_send = default_timer()
+        packet = ICMP_Request(self._id, seq, t_send)
+        # packet = ICMP_Request.new_request(self._id, seq, t_send)
         # self._seqs[addr_dst] += 1
 
         try:
-            len_send = sock.sendto(packet, (addr_dst, 0))
+            # len_send = sock.sendto(packet, (addr_dst, 0))
+            len_send = sock.sendto(str(packet), (addr_dst, 0))
+
+            # outs = []
+            with self.__class__.queue as queue:
+                outs = [sent_seq for sent_seq, sent_t in queue[addr_dst].items() if t_send - sent_t >= 3.0]
+                if len(outs):
+                    for out in outs:
+                        del queue[addr_dst][out]
+
+                queue[addr_dst][seq] = t_send
+                # print queue
+
+            if len(outs):
+                with self._history as history:
+                    history[addr_dst].append( ResultPing(addr_dst, seq, ResultPing.TIMEOUT).as_record() )
+                    # print history
 
         except socket.error as excpt:
             logging.error("failed to sending to {0}".format(addr_dst))
