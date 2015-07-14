@@ -25,11 +25,13 @@ def history():
 
 @app.route("/main")
 def main_page():
-    return render_template("main.html", scale_bar=scale_bar)
+    return render_template("main.html", scale_bar=scale_bar,
+                           const_timeout=pinger.ResultPing.TIMEOUT)
 
 
 if __name__ == "__main__":
-    senders, receiver = pinger.generate_pingers(targets=["localhost"])
+    # senders, receiver = pinger.generate_pingers(targets=["localhost"])
+    senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.155"])
     # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu"])
 
     try:

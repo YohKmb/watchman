@@ -13,6 +13,8 @@
     var scale_bar = msec * {{ scale_bar }};
     var scale_unit = 10;
 
+    const const_timeout = {{ const_timeout }};
+
     var render = function () {
         d3.json("http://localhost:5000/history", function (jdata) {
             var selec_box = d3.select("div.content").selectAll("div.box");

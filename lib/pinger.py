@@ -249,7 +249,7 @@ class Pinger(Thread):
 
     @property
     def history(self):
-        print self.__class__.__dict__
+        # print self.__class__.__dict__
         with self._history as history:
             return history
 
@@ -283,8 +283,9 @@ class Pinger(Thread):
                 with self._history as history:
                     history[res.addr].append(res.as_record() )
 
-                with self.__class__.queue as queue:
-                    del queue[addr]
+                with self.queue as queue:
+                    if seq in queue[res.addr]:
+                        del queue[res.addr][seq]
                     # print queue
 
                 print res
@@ -302,7 +303,7 @@ class Pinger(Thread):
 
     def _send_one(self, sock, addr_dst):
 
-        with self.__class__.seqs as seqs:
+        with self.seqs as seqs:
             seq = seqs[addr_dst]
             seqs[addr_dst] += 1
 
@@ -317,7 +318,7 @@ class Pinger(Thread):
             len_send = sock.sendto(str(packet), (addr_dst, 0))
 
             # outs = []
-            with self.__class__.queue as queue:
+            with self.queue as queue:
                 outs = [sent_seq for sent_seq, sent_t in queue[addr_dst].items() if t_send - sent_t >= 3.0]
                 if len(outs):
                     for out in outs:
