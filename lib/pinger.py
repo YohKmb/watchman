@@ -322,14 +322,16 @@ class Pinger(Thread):
                 outs = [sent_seq for sent_seq, sent_t in queue[addr_dst].items() if t_send - sent_t >= 3.0]
                 if len(outs):
                     for out in outs:
-                        del queue[addr_dst][out]
+                        if out in queue[addr_dst]:
+                            del queue[addr_dst][out]
 
                 queue[addr_dst][seq] = t_send
                 # print queue
 
             if len(outs):
                 with self._history as history:
-                    history[addr_dst].append( ResultPing(addr_dst, seq, ResultPing.TIMEOUT).as_record() )
+                    for out in outs:
+                        history[addr_dst].append( ResultPing(addr_dst, out, ResultPing.TIMEOUT).as_record() )
                     # print history
 
         except socket.error as excpt:

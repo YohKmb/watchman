@@ -31,7 +31,7 @@ def main_page():
 
 if __name__ == "__main__":
     # senders, receiver = pinger.generate_pingers(targets=["localhost"])
-    senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.155"])
+    senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.161"])
     # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu"])
 
     try:
