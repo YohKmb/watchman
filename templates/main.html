@@ -76,7 +76,9 @@
         return d["seq"];
     };
 
-    var get_hei = function (d) {
+    var get_hei = function (d) {if (d["rtt"] == const_timeout) {
+            return "20px"
+        };
         return (get_rtt(d) * 100) + "px";
     };
 
