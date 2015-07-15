@@ -964,6 +964,7 @@ td, th {
     text-align: center;
     border: #969696 solid 2px;
     padding: 0px;
+    border-radius: 10px;
     /*vertical-align: top;*/
     /*padding: 5px;*/
     position: relative;
