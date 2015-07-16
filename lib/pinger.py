@@ -169,6 +169,12 @@ class ResultPing(namedtuple("Resut_Ping", ("addr", "seq", "rtt"))):
         return dict(rec)
 
 
+class StatsPing(namedtuple("StatsPing", ("sent", "recv", "avg"))):
+
+    def __repr__(self):
+        return "sent={0}, recv={1}, avg={2}".format( *tuple(self))
+
+
 class SafeDict(defaultdict):
 
     def __init__(self, *args, **kwargs):
@@ -194,6 +200,7 @@ class Pinger(Thread):
     queue = SafeDict(lambda: {})
 
     _history = SafeDict(lambda: deque(maxlen=20))
+    _stats = SafeDict(lambda: {})
 
     def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False):
 
@@ -280,13 +287,12 @@ class Pinger(Thread):
                 addr, port = addr_port
                 res = ResultPing(addr, seq, resp_time)
 
-                with self._history as history:
-                    history[res.addr].append(res.as_record() )
-
                 with self.queue as queue:
                     if seq in queue[res.addr]:
                         del queue[res.addr][seq]
-                    # print queue
+
+                    with self._history as history:
+                        history[res.addr].append(res.as_record() )
 
                 print res
                 return res
@@ -319,19 +325,22 @@ class Pinger(Thread):
 
             # outs = []
             with self.queue as queue:
+
                 outs = [sent_seq for sent_seq, sent_t in queue[addr_dst].items() if t_send - sent_t >= 3.0]
+
                 if len(outs):
                     for out in outs:
                         if out in queue[addr_dst]:
                             del queue[addr_dst][out]
 
-                queue[addr_dst][seq] = t_send
-                # print queue
+                        with self._history as history:
+                            history[addr_dst].append( ResultPing(addr_dst, out, ResultPing.TIMEOUT).as_record() )
 
-            if len(outs):
-                with self._history as history:
-                    for out in outs:
-                        history[addr_dst].append( ResultPing(addr_dst, out, ResultPing.TIMEOUT).as_record() )
+                queue[addr_dst][seq] = t_send
+                # if len(outs):
+                #     with self._history as history:
+                #         for out in outs:
+                #             history[addr_dst].append( ResultPing(addr_dst, out, ResultPing.TIMEOUT).as_record() )
                     # print history
 
         except socket.error as excpt:
