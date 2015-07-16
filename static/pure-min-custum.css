@@ -936,7 +936,7 @@ td, th {
 }
 
 .v-bar {
-    min-height: 20px;
+    min-height: 15px;
     min-width: 25px;
     background-color: #7783d7;
     /*margin-right: 2px;*/
@@ -959,7 +959,7 @@ td, th {
 .box {
     width: 200px;
     height: 200px;
-    margin: 40px;
+    margin: 20px;
     float: left;
     text-align: center;
     border: #969696 solid 2px;
