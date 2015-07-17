@@ -183,9 +183,11 @@ class SafeDict(defaultdict):
 
     def __enter__(self):
         self._lock.acquire()
+        # print str(self) + " : locked by " + str(current_thread() )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        # print str(self) + " : released by " + str(current_thread() )
         self._lock.release()
 
 
@@ -197,10 +199,10 @@ class Pinger(Thread):
     PROTO_STRUCT_FMT = "!BBHHH"
 
     seqs = SafeDict(lambda: 1)
-    queue = SafeDict(lambda: {})
+    _queue = SafeDict(lambda: {})
 
     _history = SafeDict(lambda: deque(maxlen=20))
-    _stats = SafeDict(lambda: {})
+    _stats = SafeDict(lambda: {}) # Its key is addr and its val is StatsPing instance
 
     def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False):
 
@@ -258,7 +260,12 @@ class Pinger(Thread):
     def history(self):
         # print self.__class__.__dict__
         with self._history as history:
-            return history
+            return history.copy()
+
+    @property
+    def stats(self):
+        with self._stats as stats:
+            return stats.copy()
 
     @property
     def targets(self):
@@ -287,12 +294,14 @@ class Pinger(Thread):
                 addr, port = addr_port
                 res = ResultPing(addr, seq, resp_time)
 
-                with self.queue as queue:
-                    if seq in queue[res.addr]:
-                        del queue[res.addr][seq]
-
+                with self._queue as queue:
                     with self._history as history:
-                        history[res.addr].append(res.as_record() )
+
+                        if seq in queue[res.addr]:
+                            del queue[res.addr][seq]
+                            print "del queuq seq {0} : recv".format(seq)
+
+                            history[res.addr].append(res.as_record() )
 
                 print res
                 return res
@@ -324,19 +333,21 @@ class Pinger(Thread):
             len_send = sock.sendto(str(packet), (addr_dst, 0))
 
             # outs = []
-            with self.queue as queue:
+            with self._queue as queue:
+                with self._history as history:
 
-                outs = [sent_seq for sent_seq, sent_t in queue[addr_dst].items() if t_send - sent_t >= 3.0]
+                    outs = [sent_seq for sent_seq, sent_t in queue[addr_dst].items() if t_send - sent_t >= 3.0]
 
-                if len(outs):
-                    for out in outs:
-                        if out in queue[addr_dst]:
-                            del queue[addr_dst][out]
+                    if len(outs):
+                        for out in outs:
+                            if out in queue[addr_dst]:
+                                del queue[addr_dst][out]
+                                print "del queuq seq {0} : send".format(out)
 
-                        with self._history as history:
+                            # with self._history as history:
                             history[addr_dst].append( ResultPing(addr_dst, out, ResultPing.TIMEOUT).as_record() )
 
-                queue[addr_dst][seq] = t_send
+                    queue[addr_dst][seq] = t_send
                 # if len(outs):
                 #     with self._history as history:
                 #         for out in outs:
