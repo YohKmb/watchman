@@ -27,7 +27,8 @@
                     .enter()
                     .append("div").attr("class", "box")
                     .attr("id", get_hostname)
-                    .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px");
+                    .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px")
+                    .append("table");
 
 //            selec_box
 //                    .append("table");
@@ -41,43 +42,47 @@
 
             for (var res in jdata) {
 
-                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
-                        .select("table");
+//                var selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+//                        .select("table")
+//                        .data(Array(jdata[res]["stats"]))
+//                        .enter()
+//                        .append("table");
 
-                var selec_table =selec_box
-                        .data(jdata[res])
-                        .enter()
-                        .append("table");
+//                var selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+//                        .select("table");
+
+                var selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+                        .selectAll("table");
+//                console.log(selec_table);
 
                 selec_table
-                        .data(jdata[res])
-                        .exit()
-                        .remove();
-
-                selec_table
-                        .data(jdata[res])
+                        .selectAll("thead")
+                        .data(Array(jdata[res]["stats"]))
                         .enter()
                         .append("thead");
                 selec_table
-                        .data(jdata[res])
+                        .selectAll("tbody")
+                        .data(Array(jdata[res]["stats"]))
                         .enter()
                         .append("tbody");
 
                 selec_table
                         .select("thead")
+                        .selectAll("th")
                         .data(d3.keys(jdata[res]["stats"]))
                         .enter()
                         .append("th")
                         .text(function (d) {
                             return d;
                         });
-
+//
                 selec_table
-                        .select("tbody").selectAll("tr")
+                        .select("tbody")
+                        .selectAll("tr")
                         .data(Array(jdata[res]["stats"]))
                         .enter()
                         .append("tr");
-
+//
                 selec_table
                         .select("tbody").selectAll("tr").selectAll("td")
                         .data(d3.values(jdata[res]["stats"]))
