@@ -28,12 +28,8 @@
                     .append("div").attr("class", "box")
                     .attr("id", get_hostname)
                     .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px")
-                    .append("table");
-
-//            selec_box
-//                    .append("table");
-//            selec_box
-//                    .append("div").attr("class", "box");
+                    .append("table")
+                    .attr("class", "pure-table");
 
             selec_box
                     .data(jdata)
@@ -88,6 +84,20 @@
                         .data(d3.values(jdata[res]["stats"]))
                         .enter()
                         .append("td")
+                        .text(function (d) {
+                            return d;
+                        });
+
+                selec_table
+                        .select("tbody").selectAll("tr").selectAll("td")
+                        .data(d3.values(jdata[res]["stats"]))
+                        .exit()
+                        .remove();
+
+                selec_table
+                        .select("tbody").selectAll("tr").selectAll("td")
+                        .data(d3.values(jdata[res]["stats"]))
+//                        .enter()
                         .text(function (d) {
                             return d;
                         });
