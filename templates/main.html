@@ -8,6 +8,8 @@
 
     var box_hei = 150,
             box_wid = (wid_bar + merg_bar) * max_history + merg_bar;
+    var hostdiv_hei = box_hei + 20,
+            hostdiv_wid = box_wid + 20;
 
     const msec = 0.001;
     var scale_bar = msec * {{ scale_bar }};
@@ -25,7 +27,12 @@
                     .enter()
                     .append("div").attr("class", "box")
                     .attr("id", get_hostname)
-                    .style("width", box_wid + "px").style("height", box_hei + "px");
+                    .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px");
+
+//            selec_box
+//                    .append("table");
+//            selec_box
+//                    .append("div").attr("class", "box");
 
             selec_box
                     .data(jdata)
@@ -33,6 +40,54 @@
                     .remove();
 
             for (var res in jdata) {
+
+                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+                        .select("table");
+
+                var selec_table =selec_box
+                        .data(jdata[res])
+                        .enter()
+                        .append("table");
+
+                selec_table
+                        .data(jdata[res])
+                        .exit()
+                        .remove();
+
+                selec_table
+                        .data(jdata[res])
+                        .enter()
+                        .append("thead");
+                selec_table
+                        .data(jdata[res])
+                        .enter()
+                        .append("tbody");
+
+                selec_table
+                        .select("thead")
+                        .data(d3.keys(jdata[res]["stats"]))
+                        .enter()
+                        .append("th")
+                        .text(function (d) {
+                            return d;
+                        });
+
+                selec_table
+                        .select("tbody").selectAll("tr")
+                        .data(Array(jdata[res]["stats"]))
+                        .enter()
+                        .append("tr");
+
+                selec_table
+                        .select("tbody").selectAll("tr").selectAll("td")
+                        .data(d3.values(jdata[res]["stats"]))
+                        .enter()
+                        .append("td")
+                        .text(function (d) {
+                            return d;
+                        });
+
+
                 selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
                         .selectAll("div.v-bar");
 
