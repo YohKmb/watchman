@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+
 
 __author__ = "YohKmb <yoh134shonan@gmail.com>"
 __status__ = "developping"
@@ -16,8 +18,6 @@ from threading import Thread, Event, Lock, current_thread
 from collections import defaultdict, namedtuple, deque
 from functools import wraps
 from contextlib import closing
-
-# import pickle
 
 
 # choose an apppropriate timer module depending on the platform
@@ -169,10 +169,29 @@ class ResultPing(namedtuple("Resut_Ping", ("addr", "seq", "rtt"))):
         return dict(rec)
 
 
-class StatsPing(namedtuple("StatsPing", ("sent", "recv", "avg"))):
+class StatsPing(namedtuple("StatsPing", ("sent", "recv", "avg", "loss"))):
 
     def __repr__(self):
-        return "sent={0}, recv={1}, avg={2}".format( *tuple(self))
+        return "sent={0}, recv={1}, avg={2}, loss={3}".format( *tuple(self))
+
+    def as_record(self):
+        asrec = dict(self._asdict())
+        asrec["loss"] = self.loss / (self.recv + self.loss)
+
+        return asrec
+        # return dict(self._asdict())
+
+    def update_recv(self, res):
+        sum_rtt = self.avg * self.recv + res.rtt
+        recv = self.recv + 1
+
+        return StatsPing(self.sent, recv, sum_rtt / recv, self.loss)
+
+    def update_send(self):
+        return StatsPing(self.sent + 1, self.recv, self.avg, self.loss)
+
+    def update_timeout(self):
+        return StatsPing(self.sent, self.recv, self.avg, self.loss + 1)
 
 
 class SafeDict(defaultdict):
@@ -202,7 +221,7 @@ class Pinger(Thread):
     _queue = SafeDict(lambda: {})
 
     _history = SafeDict(lambda: deque(maxlen=20))
-    _stats = SafeDict(lambda: {}) # Its key is addr and its val is StatsPing instance
+    _stats = SafeDict(lambda: StatsPing(0, 0, 0, 0)) # Its key is addr and its val is StatsPing instance
 
     def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False):
 
@@ -303,6 +322,11 @@ class Pinger(Thread):
 
                             history[res.addr].append(res.as_record() )
 
+                    with self._stats as stats:
+                        stats_current = stats[res.addr]
+                        # print stats_current
+                        stats[res.addr] = stats_current.update_recv(res)
+
                 print res
                 return res
                 # return ResultPing(addr, seq, resp_time)
@@ -329,10 +353,8 @@ class Pinger(Thread):
         # self._seqs[addr_dst] += 1
 
         try:
-            # len_send = sock.sendto(packet, (addr_dst, 0))
             len_send = sock.sendto(str(packet), (addr_dst, 0))
 
-            # outs = []
             with self._queue as queue:
                 with self._history as history:
 
@@ -348,11 +370,21 @@ class Pinger(Thread):
                             history[addr_dst].append( ResultPing(addr_dst, out, ResultPing.TIMEOUT).as_record() )
 
                     queue[addr_dst][seq] = t_send
-                # if len(outs):
-                #     with self._history as history:
-                #         for out in outs:
-                #             history[addr_dst].append( ResultPing(addr_dst, out, ResultPing.TIMEOUT).as_record() )
-                    # print history
+
+                with self._stats as stats:
+                    # if len(outs):
+                    #     for out in outs:
+                    #         stats_current = stats[addr_dst]
+
+                    stats_current = stats[addr_dst].update_send()
+                    stats[addr_dst] = stats_current
+                    # stats[addr_dst] = stats_current.update_send()
+
+                    if len(outs):
+                        for out in outs:
+                            stats_current = stats_current.update_timeout()
+
+                        stats[addr_dst] = stats_current
 
         except socket.error as excpt:
             logging.error("failed to sending to {0}".format(addr_dst))

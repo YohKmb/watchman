@@ -18,10 +18,13 @@ scale_bar = 10
 
 @app.route("/history")
 def history():
-    hists = receiver.history
-    return Response(json.dumps(
-        [{"host":k, "history":list(v)} for k,v in hists.items() ]
-    ))
+    # hists = receiver.history
+    stats = receiver.stats
+    hists = [{"host":k, "history":list(v), "stats":stats[k].as_record()} for k,v in receiver.history.items() ]
+
+    return Response( json.dumps(hists) )
+    # return Response( json.dumps(hists.update(stats)) )
+        # [{"host":k, "history":list(v)} for k,v in hists.items() ]
 
 @app.route("/main")
 def main_page():
@@ -32,7 +35,7 @@ def main_page():
 if __name__ == "__main__":
     # senders, receiver = pinger.generate_pingers(targets=["localhost"])
     senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.164"])
-    # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu"])
+    # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu", "www.google.com"])
 
     try:
         pinger.start_pingers(senders, receiver, is_fg=False)
