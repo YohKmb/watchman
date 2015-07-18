@@ -3,12 +3,10 @@
 
 from __future__ import division
 
-
-__author__ = "YohKmb <yoh134shonan@gmail.com>"
-__status__ = "developping"
-__version__ = "0.0.1"
-__date__ = "July 2015"
-
+# __author__ = "YohKmb <yoh134shonan@gmail.com>"
+# __status__ = "developping"
+# __version__ = "0.0.1"
+# __date__ = "July 2015"
 
 import socket, struct, array
 import sys, os, time, logging
