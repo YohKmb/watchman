@@ -14,12 +14,15 @@ app = Flask(__name__)
 senders, receiver = None, None
 
 scale_bar = 10
+keyorder = [k for k in pinger.StatsPing(0,0,0,0)._asdict()]
+print keyorder
 
 
 @app.route("/history")
 def history():
     # hists = receiver.history
     stats = receiver.stats
+    # hists = [{"host":k, "history":list(v), "stats":stats[k]} for k,v in receiver.history.items() ]
     hists = [{"host":k, "history":list(v), "stats":stats[k].as_record()} for k,v in receiver.history.items() ]
 
     return Response( json.dumps(hists) )
@@ -29,7 +32,8 @@ def history():
 @app.route("/main")
 def main_page():
     return render_template("main.html", scale_bar=scale_bar,
-                           const_timeout=pinger.ResultPing.TIMEOUT)
+                           const_timeout=pinger.ResultPing.TIMEOUT,
+                           const_keyorder=keyorder)
 
 
 if __name__ == "__main__":

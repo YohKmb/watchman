@@ -169,20 +169,18 @@ class ResultPing(namedtuple("Resut_Ping", ("addr", "seq", "rtt"))):
 
 class StatsPing(namedtuple("StatsPing", ("sent", "recv", "avg", "loss"))):
 
-    def __repr__(self):
-        return "sent={0}, recv={1}, avg={2}, loss={3}".format( *tuple(self))
+    # def __repr__(self):
+    #     return "{" + "\"Sent\":{0}, \"Recv\":{1}, \"Avg\":{2}, \"Loss\":{3}".format( *tuple(self)) + "}"
+        # return "sent={0}, recv={1}, avg={2}, loss={3}".format( *tuple(self))
 
     def as_record(self):
         asrec = dict(self._asdict())
         asrec["loss"] = self.loss / (self.recv + self.loss)
-
         return asrec
-        # return dict(self._asdict())
 
     def update_recv(self, res):
         sum_rtt = self.avg * self.recv + res.rtt
         recv = self.recv + 1
-
         return StatsPing(self.sent, recv, sum_rtt / recv, self.loss)
 
     def update_send(self):

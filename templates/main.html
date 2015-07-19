@@ -17,6 +17,7 @@
     const min_height = 15;
 
     const const_timeout = {{ const_timeout }};
+    const const_keyorder = {{ const_keyorder|safe }};
 
     var render = function () {
         d3.json("http://localhost:5000/history", function (jdata) {
@@ -65,11 +66,12 @@
                 selec_table
                         .select("thead")
                         .selectAll("th")
-                        .data(d3.keys(jdata[res]["stats"]))
+                        .data(const_keyorder)
+//                        .data(d3.keys(jdata[res]["stats"]))
                         .enter()
                         .append("th")
                         .text(function (d) {
-                            return d;
+                            return d.charAt(0).toUpperCase() + d.slice(1);
                         });
 //
                 selec_table
@@ -81,12 +83,13 @@
 //
                 selec_table
                         .select("tbody").selectAll("tr").selectAll("td")
-                        .data(d3.values(jdata[res]["stats"]))
+                        .data(ordered_values(jdata[res]["stats"], const_keyorder))
+//                        .data(d3.values(jdata[res]["stats"]))
                         .enter()
-                        .append("td")
-                        .text(function (d) {
-                            return d;
-                        });
+                        .append("td");
+//                        .text(function (d) {
+//                            return d;
+//                        });
 
                 selec_table
                         .select("tbody").selectAll("tr").selectAll("td")
@@ -96,8 +99,8 @@
 
                 selec_table
                         .select("tbody").selectAll("tr").selectAll("td")
-                        .data(d3.values(jdata[res]["stats"]))
-//                        .enter()
+                        .data(ordered_values(jdata[res]["stats"], const_keyorder))
+//                        .data(d3.values(jdata[res]["stats"]))
                         .text(function (d) {
                             return d;
                         });
@@ -160,6 +163,15 @@
             return "#9E446B"
         };
         return "#7783d7";
+    };
+
+    var ordered_values = function (dict, key_order) {
+        var val_order = [];
+        for (var k in key_order) {
+            console.log(key_order[k]);
+            val_order.push(dict[key_order[k]]);
+        };
+        return val_order;
     };
 
     setInterval(render, 2000);
