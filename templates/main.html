@@ -28,9 +28,22 @@
                     .enter()
                     .append("div").attr("class", "box")
                     .attr("id", get_hostname)
-                    .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px")
-                    .append("table")
-                    .attr("class", "pure-table");
+                    .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px");
+//
+//            selec_box
+////                    .selectAll("table")
+//                    .data(jdata)
+////                    .enter()
+//            selec_box
+//                    .data(jdata)
+//                    .append("table")
+//                    .attr("class", "pure-table");
+
+//            selec_box
+//                    .data(jdata)
+//                    .append("div")
+//                    .attr("class", "box")
+//                    .attr("class", "history");
 
             selec_box
                     .data(jdata)
@@ -50,6 +63,12 @@
 
                 var selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
                         .selectAll("table");
+
+                selec_table
+                        .data(Array(jdata[res]["stats"]))
+                        .enter()
+                        .append("table")
+                        .attr("class", "pure-table");
 //                console.log(selec_table);
 
                 selec_table
@@ -104,6 +123,11 @@
                         .text(function (d) {
                             return d;
                         });
+
+                selec_table
+                        .data(Array(jdata[res]["stats"]))
+                        .exit()
+                        .remove();
 
 
                 selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
@@ -168,7 +192,6 @@
     var ordered_values = function (dict, key_order) {
         var val_order = [];
         for (var k in key_order) {
-            console.log(key_order[k]);
             val_order.push(dict[key_order[k]]);
         };
         return val_order;
