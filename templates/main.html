@@ -71,7 +71,8 @@
                         .data(Array(jdata[res]["stats"]))
                         .enter()
                         .append("table")
-                        .attr("class", "pure-table");
+                        .attr("class", "pure-table")
+                        .append("caption").style("text-align", "left").text(jdata[res]["fqdn"]);
 //                console.log(selec_table);
 
                 selec_table

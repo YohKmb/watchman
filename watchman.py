@@ -20,14 +20,14 @@ print keyorder
 
 @app.route("/history")
 def history():
-    # hists = receiver.history
     stats = receiver.stats
-    # hists = [{"host":k, "history":list(v), "stats":stats[k]} for k,v in receiver.history.items() ]
-    hists = [{"host":k, "history":list(v), "stats":stats[k].as_record()} for k,v in receiver.history.items() ]
+    targets = {}
+    for sender in senders:
+        targets.update(sender.targets)
+
+    hists = [{"host":k, "history":list(v), "stats":stats[k].as_record(), "fqdn":targets[k]} for k,v in receiver.history.items() ]
 
     return Response( json.dumps(hists) )
-    # return Response( json.dumps(hists.update(stats)) )
-        # [{"host":k, "history":list(v)} for k,v in hists.items() ]
 
 @app.route("/main")
 def main_page():

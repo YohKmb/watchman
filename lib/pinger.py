@@ -224,7 +224,6 @@ class Pinger(Thread):
         super(Pinger, self).__init__()
 
         self._id = os.getpid() & 0xFFFF
-
         self._is_receiver = is_receiver
         self._timeout = timeout
         self._intv_ping = intv_ping
@@ -284,7 +283,7 @@ class Pinger(Thread):
 
     @property
     def targets(self):
-        return self._targets
+        return self._targets.copy()
 
     @targets.setter
     def targets(self, targets):
