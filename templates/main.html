@@ -19,6 +19,9 @@
     const const_timeout = {{ const_timeout }};
     const const_keyorder = {{ const_keyorder|safe }};
 
+    var fmt_percent = d3.format(",.1%");
+    var fmt_nanosec = d3.format(".6f");
+
     var render = function () {
         d3.json("http://localhost:5000/history", function (jdata) {
             var selec_box = d3.select("div.content").selectAll("div.box");
@@ -192,7 +195,16 @@
     var ordered_values = function (dict, key_order) {
         var val_order = [];
         for (var k in key_order) {
-            val_order.push(dict[key_order[k]]);
+            var key = key_order[k];
+            var val = dict[key];
+
+            if (key == "avg") {
+                val = fmt_nanosec(val);
+            } else if (key == "loss") {
+                val = fmt_percent(val);
+            };
+
+            val_order.push(val);
         };
         return val_order;
     };
