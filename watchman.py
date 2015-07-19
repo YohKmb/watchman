@@ -5,8 +5,6 @@
 from flask import Flask, render_template, Response
 import json
 
-# from __future__ import division
-
 from lib import pinger
 
 
@@ -38,8 +36,8 @@ def main_page():
 
 if __name__ == "__main__":
     # senders, receiver = pinger.generate_pingers(targets=["localhost"])
-    senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.167"])
-    # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu", "www.google.com"])
+    # senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.167"])
+    senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu", "www.google.com"])
 
     try:
         pinger.start_pingers(senders, receiver, is_fg=False)

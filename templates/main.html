@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block post_body %}
+
 <script type="text/javascript">
 
     var wid_bar = 25;
@@ -32,21 +33,6 @@
                     .append("div").attr("class", "box")
                     .attr("id", get_hostname)
                     .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px");
-//
-//            selec_box
-////                    .selectAll("table")
-//                    .data(jdata)
-////                    .enter()
-//            selec_box
-//                    .data(jdata)
-//                    .append("table")
-//                    .attr("class", "pure-table");
-
-//            selec_box
-//                    .data(jdata)
-//                    .append("div")
-//                    .attr("class", "box")
-//                    .attr("class", "history");
 
             selec_box
                     .data(jdata)
@@ -54,15 +40,6 @@
                     .remove();
 
             for (var res in jdata) {
-
-//                var selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
-//                        .select("table")
-//                        .data(Array(jdata[res]["stats"]))
-//                        .enter()
-//                        .append("table");
-
-//                var selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
-//                        .select("table");
 
                 var selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
                         .selectAll("table");
@@ -73,7 +50,6 @@
                         .append("table")
                         .attr("class", "pure-table")
                         .append("caption").style("text-align", "left").text(jdata[res]["fqdn"]);
-//                console.log(selec_table);
 
                 selec_table
                         .selectAll("thead")
@@ -90,29 +66,24 @@
                         .select("thead")
                         .selectAll("th")
                         .data(const_keyorder)
-//                        .data(d3.keys(jdata[res]["stats"]))
                         .enter()
                         .append("th")
                         .text(function (d) {
                             return d.charAt(0).toUpperCase() + d.slice(1);
                         });
-//
+
                 selec_table
                         .select("tbody")
                         .selectAll("tr")
                         .data(Array(jdata[res]["stats"]))
                         .enter()
                         .append("tr");
-//
+
                 selec_table
                         .select("tbody").selectAll("tr").selectAll("td")
                         .data(ordered_values(jdata[res]["stats"], const_keyorder))
-//                        .data(d3.values(jdata[res]["stats"]))
                         .enter()
                         .append("td");
-//                        .text(function (d) {
-//                            return d;
-//                        });
 
                 selec_table
                         .select("tbody").selectAll("tr").selectAll("td")
@@ -214,4 +185,5 @@
     render();
 
 </script>
+
 {% endblock %}

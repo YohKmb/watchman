@@ -882,7 +882,7 @@ td, th {
 .pure-table caption {
     color: #565656;
     font: 100%/1 arial, sans-serif;
-    padding: 0.7em 0;
+    padding: 0.6em 0.5em;
     text-align: center
 }
 
