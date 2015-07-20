@@ -1,0 +1,196 @@
+{% extends "layout.html" %}
+{% block post_body %}
+
+<script type="text/javascript">
+
+    var render = function () {
+        d3.json("http://localhost:5000/targets", function (jdata) {
+            var selec_box = d3.select("div.content").selectAll("div.box");
+
+            selec_box
+                    .data(jdata)
+                    .enter()
+                    .append("div").attr("class", "box")
+                    .attr("id", get_hostname)
+                    .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px");
+
+            //selec_box = d3.select("div.content")
+            //        .selectAll("div.box");
+
+            selec_box
+                    .selectAll("div.box")
+                    .data(jdata)
+                    .exit()
+                    .remove();
+
+            for (var res in jdata) {
+
+                var selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+                        .selectAll("table");
+
+                selec_table
+                        .data(Array(jdata[res]["stats"]))
+                        .enter()
+                        .append("table")
+                        .attr("class", "pure-table")
+                        .append("caption").style("text-align", "left")
+                        .text(jdata[res]["fqdn"]);
+
+                selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+                        .selectAll("table");
+
+
+                selec_table
+                        .selectAll("thead")
+                        .data(Array(jdata[res]["stats"]))
+                        .enter()
+                        .append("thead");
+                selec_table
+                        .selectAll("tbody")
+                        .data(Array(jdata[res]["stats"]))
+                        .enter()
+                        .append("tbody");
+
+                selec_table
+                        .select("thead")
+                        .selectAll("th")
+                        .data(const_keyorder)
+                        .enter()
+                        .append("th")
+                        .text(function (d) {
+                            return d.charAt(0).toUpperCase() + d.slice(1);
+                        });
+
+                selec_table
+                        .select("tbody")
+                        .selectAll("tr")
+                        .data(Array(jdata[res]["stats"]))
+                        .enter()
+                        .append("tr");
+
+                selec_table
+                        .select("tbody").selectAll("tr").selectAll("td")
+                        .data(ordered_values(jdata[res]["stats"], const_keyorder))
+                        .enter()
+                        .append("td");
+
+                selec_table
+                        .select("tbody").selectAll("tr").selectAll("td")
+                        .data(d3.values(jdata[res]["stats"]))
+                        .exit()
+                        .remove();
+
+                selec_table
+                        .select("tbody").selectAll("tr").selectAll("td")
+                        .data(ordered_values(jdata[res]["stats"], const_keyorder))
+//                        .data(d3.values(jdata[res]["stats"]))
+                        .text(function (d) {
+                            return d;
+                        });
+
+                selec_table
+                        .data(Array(jdata[res]["stats"]))
+                        .exit()
+                        .remove();
+
+
+                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+                        .selectAll("div.history");
+
+                selec_box
+                        .data(Array(jdata[res]["history"]))
+                        .enter()
+                        .append("div")
+                        .attr("class", "history box")
+                        .style("width", box_wid + "px").style("height", box_hei + "px");
+
+                selec_box
+                        .data(Array(jdata[res]["history"]))
+                        .exit()
+                        .remove();
+
+                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")
+                        .selectAll("div.v-bar");
+
+                selec_box
+                        .data(jdata[res]["history"])
+                        .enter()
+                        .append("div")
+                        .attr("class", "v-bar")
+                        .style("visibility", "hidden")
+                        .append("span");
+//                        .text(get_seq);
+
+                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")
+                        .selectAll("div.v-bar");
+
+                selec_box
+                        .data(jdata[res]["history"])
+                        .exit()
+                        .remove();
+
+                selec_box
+                        .data(jdata[res]["history"])
+                        .attr("class", "v-bar")
+                        .style("height", get_hei)
+                        .style("left", function (d, i) {
+                            return (2 + i * 27) + "px"
+                        })
+                        .style("background-color", get_color)
+                        .style("visibility", "visible")
+                        .select("span")
+                        .text(get_seq);
+            }
+        });
+    };
+
+    var get_hostname = function (d) {
+        return d["host"];
+    };
+
+    var get_rtt = function (d) {
+        return d["rtt"];
+    };
+
+    var get_seq = function (d) {
+        return d["seq"];
+    };
+
+    var get_hei = function (d) {if (d["rtt"] == const_timeout) {
+            return min_height + "px"
+        };
+//        return (Math.ceil(get_rtt(d) / scale_bar) * 30) + "px";
+        return (Math.ceil(get_rtt(d) / scale_bar) * scale_unit + min_height) + "px";
+//        return (get_rtt(d) * 100) + "px";
+    };
+
+    var get_color = function(d) {
+        if (d["rtt"] == const_timeout) {
+            return "#9E446B"
+        };
+        return "#7783d7";
+    };
+
+    var ordered_values = function (dict, key_order) {
+        var val_order = [];
+        for (var k in key_order) {
+            var key = key_order[k];
+            var val = dict[key];
+
+            if (key == "avg") {
+                val = fmt_nanosec(val);
+            } else if (key == "loss") {
+                val = fmt_percent(val);
+            };
+
+            val_order.push(val);
+        };
+        return val_order;
+    };
+
+    setInterval(render, 2000);
+    render();
+
+</script>
+
+{% endblock %}

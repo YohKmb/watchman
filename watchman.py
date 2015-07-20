@@ -4,9 +4,11 @@
 
 from flask import Flask, render_template, Response
 import json
+import re
 
 from lib import pinger
 
+TARGETS_SAMPLE = ["www.kernel.org", "web.mit.edu", "www.google.com"]
 
 app = Flask(__name__)
 senders, receiver = None, None
@@ -27,11 +29,34 @@ def history():
 
     return Response( json.dumps(hists) )
 
+@app.route("/targets")
+def targets():
+    targets = {}
+    for sender in senders:
+        targets.update(sender.targets)
+
+    return Response( json.dumps(targets) )
+
 @app.route("/main")
 def main_page():
     return render_template("main.html", scale_bar=scale_bar,
                            const_timeout=pinger.ResultPing.TIMEOUT,
                            const_keyorder=keyorder)
+
+def _load_config(path_conf):
+    conf = ""
+    targets = {}
+
+    try:
+        with open(path_conf, "r") as rdf:
+            conf = rdf.read()
+        conf = re.sub(r'#.*', "", conf, re.MULTILINE)
+        if len(conf):
+                targets = json.loads(conf)
+    except:
+        pass
+
+    return targets
 
 
 if __name__ == "__main__":

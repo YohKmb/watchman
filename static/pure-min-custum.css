@@ -198,7 +198,8 @@ td, th {
 }
 
 .pure-img {
-    max-width: 100%;
+    max-width: 90%;
+    /*max-width: 100%;*/
     height: auto;
     display: block
 }
@@ -934,6 +935,14 @@ td, th {
 
 .pure-table-horizontal tbody > tr:last-child > td {
     border-bottom-width: 0
+}
+
+/*div.header h1 {*/
+    /*font-size: 1.4em;*/
+/*}*/
+
+.header h2 {
+    font-size: 1.3em;
 }
 
 .v-bar {
