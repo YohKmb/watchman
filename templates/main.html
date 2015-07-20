@@ -49,7 +49,12 @@
                         .enter()
                         .append("table")
                         .attr("class", "pure-table")
-                        .append("caption").style("text-align", "left").text(jdata[res]["fqdn"]);
+                        .append("caption").style("text-align", "left")
+                        .text(jdata[res]["fqdn"]);
+
+                selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+                        .selectAll("table");
+
 
                 selec_table
                         .selectAll("thead")

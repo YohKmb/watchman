@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Raw Selection</title>
-    <link rel="stylesheet" type="text/css" href="./styles.css"/>
+    <link rel="stylesheet" type="text/css" href="./pure-min-custum.css"/>
     <script type="text/javascript" src="../static/d3.js"></script>
 </head>
 
@@ -20,6 +20,28 @@
     var get_hostname = function (d) {
         return d["host"];
     };
+
+    var ordered_values = function (dict, key_order) {
+        var val_order = [];
+        for (var k in key_order) {
+            var key = key_order[k];
+            var val = dict[key];
+
+            if (key == "avg") {
+                val = fmt_nanosec(val);
+            } else if (key == "loss") {
+                val = fmt_percent(val);
+            }
+            ;
+
+            val_order.push(val);
+        }
+        ;
+        return val_order;
+    };
+
+    var fmt_percent = d3.format(",.1%");
+    var fmt_nanosec = d3.format(".6f");
 
     var jdata = [
         {
@@ -90,56 +112,90 @@
         }
     ];
 
+    const const_keyorder = ['sent', 'recv', 'avg', 'loss'];
+
+
     d3.select("body").selectAll("div.box")
             .data(jdata)
             .enter()
             .append("div")
             .attr("id", get_hostname)
             .attr("class", "box")
-            .style("width", (box_wid + 20) + "px").style("height", (box_hei + 20) + "px")
-            .append("table");
-
-    d3.selectAll("table")
-            .append("thead");
-
-    d3.selectAll("table")
-            .append("tbody");
+            .style("width", (box_wid + 20) + "px").style("height", (box_hei + 20) + "px");
 
 
     for (var res in jdata) {
 
-        var selec_box = d3.select("body div.box[id='" + jdata[res]["host"] + "']")
-                .select("table");
+        var selec_table = d3.select("body div.box[id='" + jdata[res]["host"] + "']")
+                .selectAll("table");
 
-        selec_box.select("thead").selectAll("th")
-                .data(d3.keys(jdata[res]["stats"]))
+        // console.log(Array(jdata[res]["stats"]));
+        selec_table
+                .data(Array(jdata[res]["stats"]))
+                .enter()
+                .append("table")
+                .attr("class", "pure-table")
+                .append("caption").style("text-align", "left")
+                .text(jdata[res]["host"]);
+
+        selec_table = d3.select("body div.box[id='" + jdata[res]["host"] + "']")
+                .selectAll("table");
+
+        selec_table//.select("table")
+                .selectAll("thead")
+                .data(Array(jdata[res]["stats"]))
+                .enter()
+                .append("thead");
+
+        selec_table
+                .selectAll("tbody")
+                .data(Array(jdata[res]["stats"]))
+                .enter()
+                .append("tbody");
+
+        selec_table
+                .select("thead")
+                .selectAll("th")
+                .data(const_keyorder)
                 .enter()
                 .append("th")
                 .text(function (d) {
-//                    console.log(d);
-                    return d;
+                    return d.charAt(0).toUpperCase() + d.slice(1);
                 });
 
-//        var stat_row = jdata[res]["stats"];
-
-        selec_box.select("tbody").selectAll("tr")
-                .data(Array(jdata[res]["stats"]) )
-//                .data(d3.values(jdata[res]["stats"]))
+        selec_table
+                .select("tbody")
+                .selectAll("tr")
+                .data(Array(jdata[res]["stats"]))
                 .enter()
                 .append("tr");
 
-//        console.log(tr);
-
-//        var td = tr.selectAll("td")
-        selec_box.select("tbody").selectAll("tr").selectAll("td")
-                .data(d3.values(jdata[res]["stats"]))
+        selec_table
+                .select("tbody").selectAll("tr").selectAll("td")
+                .data(ordered_values(jdata[res]["stats"], const_keyorder))
                 .enter()
-                .append("td")
+                .append("td");
+
+        selec_table
+                .select("tbody").selectAll("tr")
+                .selectAll("td")
+                .data(d3.values(jdata[res]["stats"]))
+                .exit()
+                .remove();
+
+        selec_table
+                .select("tbody").selectAll("tr")
+                .selectAll("td")
+                .data(ordered_values(jdata[res]["stats"], const_keyorder))
+//                        .data(d3.values(jdata[res]["stats"]))
                 .text(function (d) {
-                    console.log(d);
                     return d;
                 });
-        console.log(d3.values(jdata[res]["stats"]));
+
+        selec_table
+                .data(Array(jdata[res]["stats"]))
+                .exit()
+                .remove();
     };
 
 </script>
