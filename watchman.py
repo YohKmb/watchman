@@ -58,11 +58,22 @@ def _load_config(path_conf):
 
     return targets
 
+def _get_targets_enabled(path_conf="./targets.config"):
+    dict_target = _load_config(path_conf)
+
+    if dict_target:
+        return [targ for targ in dict_target.keys() if dict_target[targ]["enabled"]]
+    else:
+        print("No valid target was found. Failback and use example targets instead.")
+        return TARGETS_SAMPLE
+
 
 if __name__ == "__main__":
+    targets = _get_targets_enabled()
     # senders, receiver = pinger.generate_pingers(targets=["localhost"])
     # senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.167"])
-    senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu", "www.google.com"])
+    # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu", "www.google.com"])
+    senders, receiver = pinger.generate_pingers(targets=targets)
 
     try:
         pinger.start_pingers(senders, receiver, is_fg=False)
