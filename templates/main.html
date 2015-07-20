@@ -9,8 +9,8 @@
 
     var box_hei = 150,
             box_wid = (wid_bar + merg_bar) * max_history + merg_bar;
-    var hostdiv_hei = box_hei + 20,
-            hostdiv_wid = box_wid + 20;
+    var hostdiv_hei = box_hei + 40,
+            hostdiv_wid = box_wid + 300;
 
     var msec = 0.001;
     var scale_bar = msec * {{ scale_bar }};
@@ -34,7 +34,11 @@
                     .attr("id", get_hostname)
                     .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px");
 
+            //selec_box = d3.select("div.content")
+            //        .selectAll("div.box");
+
             selec_box
+                    .selectAll("div.box")
                     .data(jdata)
                     .exit()
                     .remove();
@@ -111,6 +115,21 @@
 
 
                 selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+                        .selectAll("div.history");
+
+                selec_box
+                        .data(Array(jdata[res]["history"]))
+                        .enter()
+                        .append("div")
+                        .attr("class", "history box")
+                        .style("width", box_wid + "px").style("height", box_hei + "px");
+
+                selec_box
+                        .data(Array(jdata[res]["history"]))
+                        .exit()
+                        .remove();
+
+                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")
                         .selectAll("div.v-bar");
 
                 selec_box
@@ -121,6 +140,9 @@
                         .style("visibility", "hidden")
                         .append("span");
 //                        .text(get_seq);
+
+                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")
+                        .selectAll("div.v-bar");
 
                 selec_box
                         .data(jdata[res]["history"])
