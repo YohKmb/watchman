@@ -11,23 +11,30 @@
 
     var render = function () {
 
-        d3.select("div.content")
+        var selec = d3.select("div.content")
                 .selectAll("table")
                 .data(Array(targets))
                 .enter()
-                .append("table").attr("class", "pure-table pure-table-bordered");
-
-        var selec = d3.select("div.content")
-                .selectAll("table")
+                .append("table").attr("class", "pure-table pure-table-bordered")
                 .style("margin", "50px");
 
+        selec = d3.select("div.content table");
+
         selec
+                .selectAll("thead")
+                .data(Array(targets))
+                .enter()
                 .append("thead");
+
         selec
+                .selectAll("tbody")
+                .data(Array(targets))
+                .enter()
                 .append("tbody");
 
         selec
-                .select("thead")
+                .select("div.content table thead")
+{#                .select("thead")#}
                 .selectAll("th")
                 .data(const_keyorder)
                 .enter()
@@ -120,6 +127,14 @@
                             return "Disable";
                         } else {
                             return "Enable";
+                        };
+                    })
+                    .style("background-color", function(d){
+                        if(d){
+                            return "darkgray";
+                        } else {
+{#                            return "darkolivegreen";#}
+                            return "cornflowerblue";
                         };
                     })
                     .on("click", function(d){
