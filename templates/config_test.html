@@ -10,12 +10,11 @@
 {#    const const_keyorder = {{ const_keyorder|safe }}.concat("del");#}
 
     var render = function () {
-        console.log(targets)
 
         d3.select("div.content")
-{#                .selectAll("table")#}
-{#                .data(Array(targets))#}
-{#                .enter()#}
+                .selectAll("table")
+                .data(Array(targets))
+                .enter()
                 .append("table").attr("class", "pure-table pure-table-bordered");
 
         var selec = d3.select("div.content")
@@ -54,11 +53,11 @@
                 .exit()
                 .remove();
 
-{#        d3.select("div.content")#}
-{#                .selectAll("table")#}
-{#                .data(Array(targets))#}
-{#                .exit()#}
-{#                .remove();#}
+        d3.select("div.content")
+                .selectAll("table")
+                .data(Array(targets))
+                .exit()
+                .remove();
 
         for (var targ in targets) {
 
@@ -88,15 +87,36 @@
                         return d;
                     });
 
+            console.log(targ);
             selec
                     .select('tr[id="' + targ + '"]') // conrresponding data is 'host'
+                    .selectAll("input")
+                    .data(Array(targ))
+{#            selec = d3.select("div.content table tbody")#}
+{#                    .selectAll("tr");#}
+{##}
+{#            selec#}
+{#                    .selectAll("tr")#}
+{#                    .data(d3.keys(targets))#}
+                    .enter()
                     .append("input")
                     .attr("class", "pure-button delbutton")
                     .attr("type", "button")
                     .attr("value", "Delete")
                     .on("click", function(d){
                         console.log(d);
+                        delete targets[d];
+                        console.log(targets);
+                        render();
+{#                        console.log(d);#}
                     });
+
+{#            selec#}
+{#                    .select('tr[id="' + targ + '"]') // conrresponding data is 'host'#}
+{#                    .selectAll("input")#}
+{#                    .data(Array(targets[targ]))#}
+{#                    .exit()#}
+{#                    .remove();#}
 
 {#                    .style("background", "orange")#}
 {#                    .style("color", "lightgoldenrodyellow")#}
