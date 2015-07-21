@@ -89,7 +89,8 @@
                         .append("tr");
 
                 selec_table
-                        .select("tbody").selectAll("tr").selectAll("td")
+                        .select("tbody")
+                        .selectAll("tr").selectAll("td")
                         .data(ordered_values(jdata[res]["stats"], const_keyorder))
                         .enter()
                         .append("td");

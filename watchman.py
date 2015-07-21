@@ -8,14 +8,30 @@ import re
 
 from lib import pinger
 
-TARGETS_SAMPLE = ["www.kernel.org", "web.mit.edu", "www.google.com"]
+TARGETS_SAMPLE = {
+    "www.kernel.org": {
+        "description": "Kernel.org",
+        "enabled": True,
+        "ssh": False
+    },
+    "web.mit.edu": {
+        "description": "MIT",
+        "enabled": True,
+        "ssh": False
+    },
+    "www.google.com": {
+        "description": "Google",
+        "enabled": True,
+        "ssh": False
+    }
+}
 
 app = Flask(__name__)
 senders, receiver = None, None
+targets = None
 
 scale_bar = 10
 keyorder = [k for k in pinger.StatsPing(0,0,0,0)._asdict()]
-print keyorder
 
 
 @app.route("/history")
@@ -29,13 +45,13 @@ def history():
 
     return Response( json.dumps(hists) )
 
-@app.route("/targets")
-def targets():
-    targets = {}
-    for sender in senders:
-        targets.update(sender.targets)
-
-    return Response( json.dumps(targets) )
+# @app.route("/targets")
+# def targets():
+#     targets = {}
+#     for sender in senders:
+#         targets.update(sender.targets)
+#
+#     return Response( json.dumps(targets) )
 
 @app.route("/main")
 def main_page():
@@ -43,37 +59,42 @@ def main_page():
                            const_timeout=pinger.ResultPing.TIMEOUT,
                            const_keyorder=keyorder)
 
+@app.route("/config_test")
+def config_test():
+    return render_template("config_test.html", targets=json.dumps(targets),
+                           const_keyorder=["description", "enabled", "ssh"])
+
+
 def _load_config(path_conf):
     conf = ""
-    targets = {}
-
+    dict_targets = {}
     try:
         with open(path_conf, "r") as rdf:
             conf = rdf.read()
         conf = re.sub(r'#.*', "", conf, re.MULTILINE)
         if len(conf):
-                targets = json.loads(conf)
+                dict_targets = json.loads(conf)
     except:
         pass
 
-    return targets
+    return dict_targets
 
 def _get_targets_enabled(path_conf="./targets.config"):
-    dict_target = _load_config(path_conf)
+    global targets
+    targets = _load_config(path_conf)
 
-    if dict_target:
-        return [targ for targ in dict_target.keys() if dict_target[targ]["enabled"]]
-    else:
+    if not targets:
         print("No valid target was found. Failback and use example targets instead.")
-        return TARGETS_SAMPLE
+        targets = TARGETS_SAMPLE
 
+    return [targ for targ in targets.keys() if targets[targ]["enabled"]]
 
 if __name__ == "__main__":
-    targets = _get_targets_enabled()
+    targets_list = _get_targets_enabled()
     # senders, receiver = pinger.generate_pingers(targets=["localhost"])
     # senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.167"])
     # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu", "www.google.com"])
-    senders, receiver = pinger.generate_pingers(targets=targets)
+    senders, receiver = pinger.generate_pingers(targets=targets_list)
 
     try:
         pinger.start_pingers(senders, receiver, is_fg=False)
