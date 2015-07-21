@@ -992,3 +992,13 @@ span {
 .history {
     float: right;
 }
+
+.delbutton {
+  color: rgb(250, 250, 210);
+  padding: 1em 0.9em;
+  font-size: 80%;
+  border-radius: 7px;
+  border: 2px solid rgb(153, 153, 153);
+  background: orange;
+}
+

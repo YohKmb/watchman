@@ -89,17 +89,21 @@
                     });
 
             selec
-                    .select('tr[id="' + targ + '"]')
+                    .select('tr[id="' + targ + '"]') // conrresponding data is 'host'
                     .append("input")
-                    .attr("class", "pure-button")
+                    .attr("class", "pure-button delbutton")
                     .attr("type", "button")
                     .attr("value", "Delete")
-                    .style("background", "orange")
-                    .style("color", "lightgoldenrodyellow")
-                    .style("padding", "1.0em 0.9em")
-                    .style("font-size", "80%")
-                    .style("border-radius", "7px")
-                    .style("border", "2px solid #999");
+                    .on("click", function(d){
+                        console.log(d);
+                    });
+
+{#                    .style("background", "orange")#}
+{#                    .style("color", "lightgoldenrodyellow")#}
+{#                    .style("padding", "1.0em 0.9em")#}
+{#                    .style("font-size", "80%")#}
+{#                    .style("border-radius", "7px")#}
+{#                    .style("border", "2px solid #999");#}
 
 {#            selec_table#}
 {#                    .selectAll("thead")#}
@@ -133,6 +137,10 @@
         };
         return val_order;
     };
+
+{#    var onclick_test = function (d) {#}
+{#        console.log(d);#}
+{#    };#}
 
     render();
 
