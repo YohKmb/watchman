@@ -7,16 +7,16 @@
 {#    var keyorder = ["host"];#}
 {#    keyorder.concat({{ const_keyorder|safe }});#}
     const const_keyorder = {{ const_keyorder|safe }};
-{#    var targets = {{ targets|safe }};#}
+{#    const const_keyorder = {{ const_keyorder|safe }}.concat("del");#}
 
     var render = function () {
         console.log(targets)
 
         d3.select("div.content")
 {#                .selectAll("table")#}
-{#                .data(targets)#}
+{#                .data(Array(targets))#}
 {#                .enter()#}
-                .append("table").attr("class", "pure-table");
+                .append("table").attr("class", "pure-table pure-table-bordered");
 
         var selec = d3.select("div.content")
                 .selectAll("table")
@@ -47,6 +47,19 @@
                     return d;
                 });
 
+        selec
+                .select("tbody")
+                .selectAll("tr")
+                .data(d3.keys(targets))
+                .exit()
+                .remove();
+
+{#        d3.select("div.content")#}
+{#                .selectAll("table")#}
+{#                .data(Array(targets))#}
+{#                .exit()#}
+{#                .remove();#}
+
         for (var targ in targets) {
 
 {#            console.log(targ)#}
@@ -74,6 +87,19 @@
                     .text(function (d) {
                         return d;
                     });
+
+            selec
+                    .select('tr[id="' + targ + '"]')
+                    .append("input")
+                    .attr("class", "pure-button")
+                    .attr("type", "button")
+                    .attr("value", "Delete")
+                    .style("background", "orange")
+                    .style("color", "lightgoldenrodyellow")
+                    .style("padding", "1.0em 0.9em")
+                    .style("font-size", "80%")
+                    .style("border-radius", "7px")
+                    .style("border", "2px solid #999");
 
 {#            selec_table#}
 {#                    .selectAll("thead")#}

@@ -142,7 +142,7 @@
         }
     ];
 
-    const const_keyorder = ['sent', 'recv', 'avg', 'loss'];
+    const const_keyorder = ['sent', 'recv', 'avg', 'loss'].concat("del");
 
 
     d3.select("body").selectAll("div.box")
@@ -221,6 +221,13 @@
                 .text(function (d) {
                     return d;
                 });
+
+        selec_table
+                .select("tbody").selectAll("tr")
+                .append("input")
+                .attr("class", "pure-button")
+                .attr("type", "button")
+                .attr("value", "test");
 
         selec_table
                 .data(Array(jdata[res]["stats"]))

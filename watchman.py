@@ -63,6 +63,7 @@ def main_page():
 def config_test():
     return render_template("config_test.html", targets=json.dumps(targets),
                            const_keyorder=["host", "description", "enabled", "ssh"])
+                           # const_keyorder=["host", "description", "enabled", "ssh", "delete"])
 
 
 def _load_config(path_conf):
