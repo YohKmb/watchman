@@ -53,6 +53,15 @@
                 .exit()
                 .remove();
 
+        selec
+                .select("tbody")
+                .selectAll("tr")
+                .data(d3.keys(targets))
+                .attr("id", function (d) {
+                    console.log(d);
+                    return d;
+                });
+
         d3.select("div.content")
                 .selectAll("table")
                 .data(Array(targets))
@@ -81,64 +90,63 @@
                     .selectAll("td")
                     .data(ordered_values(targets[targ], const_keyorder))
                     .enter()
-                    .append("td")
+                    .append("td");
+
+            selec
+                    .select('tr[id="' + targ + '"]')
+                    .selectAll("td")
+                    .data(ordered_values(targets[targ], const_keyorder))
                     .style("font-size", "inherit")
                     .text(function (d) {
                         return d;
                     });
 
-            console.log(targ);
             selec
                     .select('tr[id="' + targ + '"]') // conrresponding data is 'host'
-                    .selectAll("input")
+                    .selectAll("input.enabledisable")
+                    .data(Array(targets[targ]["enabled"]))
+                    .enter()
+                    .append("input")
+                    .attr("class", "pure-button enabledisable")
+                    .style("background-color", "darkgray")
+                    .attr("type", "button");
+
+            selec
+                    .select('tr[id="' + targ + '"]') // conrresponding data is 'host'
+                    .selectAll("input.enabledisable")
+                    .data(Array(targets[targ]["enabled"]))
+                    .attr("value", function(d){
+                        if(d){
+                            return "Disable";
+                        } else {
+                            return "Enable";
+                        };
+                    })
+                    .on("click", function(d){
+                        var targ_id = this.parentNode.id;
+{#                        console.log(! d);#}
+                        targets[targ_id]["enabled"] = ! d;
+                        render();
+                    });
+
+            selec
+                    .select('tr[id="' + targ + '"]') // conrresponding data is 'host'
+                    .selectAll("input.delbutton")
                     .data(Array(targ))
-{#            selec = d3.select("div.content table tbody")#}
-{#                    .selectAll("tr");#}
-{##}
-{#            selec#}
-{#                    .selectAll("tr")#}
-{#                    .data(d3.keys(targets))#}
                     .enter()
                     .append("input")
                     .attr("class", "pure-button delbutton")
                     .attr("type", "button")
                     .attr("value", "Delete")
-                    .on("click", function(d){
-                        console.log(d);
-                        delete targets[d];
+                    .on("click", function(){
+                        var targ_id = this.parentNode.id;
+                        console.log(targ_id);
+                        delete targets[targ_id];
                         console.log(targets);
                         render();
-{#                        console.log(d);#}
                     });
 
-{#            selec#}
-{#                    .select('tr[id="' + targ + '"]') // conrresponding data is 'host'#}
-{#                    .selectAll("input")#}
-{#                    .data(Array(targets[targ]))#}
-{#                    .exit()#}
-{#                    .remove();#}
-
-{#                    .style("background", "orange")#}
-{#                    .style("color", "lightgoldenrodyellow")#}
-{#                    .style("padding", "1.0em 0.9em")#}
-{#                    .style("font-size", "80%")#}
-{#                    .style("border-radius", "7px")#}
-{#                    .style("border", "2px solid #999");#}
-
-{#            selec_table#}
-{#                    .selectAll("thead")#}
-{#                    .data(targets)#}
-{#                    .enter()#}
-{#                    .append("thead");#}
-{#            selec_table#}
-{#                    .selectAll("tbody")#}
-{#                    .data(targets)#}
-{#                    .enter()#}
-{#                    .append("tbody");#}
         };
-
-{#        var selec_table = d3.select("div.content")#}
-{#                .selectAll("table");#}
     };
 
     var ordered_values = function (dict, key_order) {
@@ -146,211 +154,16 @@
         for (var k in key_order) {
             var key = key_order[k];
             var val = dict[key];
-
-{#            if (key == "avg") {#}
-{#                val = fmt_nanosec(val);#}
-{#            } else if (key == "loss") {#}
-{#                val = fmt_percent(val);#}
-{#            };#}
-
             val_order.push(val);
         };
         return val_order;
     };
 
-{#    var onclick_test = function (d) {#}
-{#        console.log(d);#}
-{#    };#}
+    var onclick_test = function (d) {
+        console.log(d);
+    };
 
     render();
-
-{#    var render = function () {#}
-{#        d3.json("http://localhost:5000/targets", function (jdata) {#}
-{#            var selec_box = d3.select("div.content").selectAll("div.box");#}
-{##}
-{#            selec_box#}
-{#                    .data(jdata)#}
-{#                    .enter()#}
-{#                    .append("div").attr("class", "box")#}
-{#                    .attr("id", get_hostname)#}
-{#                    .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px");#}
-{##}
-{#            //selec_box = d3.select("div.content")#}
-{#            //        .selectAll("div.box");#}
-{##}
-{#            selec_box#}
-{#                    .selectAll("div.box")#}
-{#                    .data(jdata)#}
-{#                    .exit()#}
-{#                    .remove();#}
-{##}
-{#            for (var res in jdata) {#}
-{##}
-{#                var selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")#}
-{#                        .selectAll("table");#}
-{##}
-{#                selec_table#}
-{#                        .data(Array(jdata[res]["stats"]))#}
-{#                        .enter()#}
-{#                        .append("table")#}
-{#                        .attr("class", "pure-table")#}
-{#                        .append("caption").style("text-align", "left")#}
-{#                        .text(jdata[res]["fqdn"]);#}
-{##}
-{#                selec_table = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")#}
-{#                        .selectAll("table");#}
-{##}
-{##}
-{#                selec_table#}
-{#                        .selectAll("thead")#}
-{#                        .data(Array(jdata[res]["stats"]))#}
-{#                        .enter()#}
-{#                        .append("thead");#}
-{#                selec_table#}
-{#                        .selectAll("tbody")#}
-{#                        .data(Array(jdata[res]["stats"]))#}
-{#                        .enter()#}
-{#                        .append("tbody");#}
-{##}
-{#                selec_table#}
-{#                        .select("thead")#}
-{#                        .selectAll("th")#}
-{#                        .data(const_keyorder)#}
-{#                        .enter()#}
-{#                        .append("th")#}
-{#                        .text(function (d) {#}
-{#                            return d.charAt(0).toUpperCase() + d.slice(1);#}
-{#                        });#}
-{##}
-{#                selec_table#}
-{#                        .select("tbody")#}
-{#                        .selectAll("tr")#}
-{#                        .data(Array(jdata[res]["stats"]))#}
-{#                        .enter()#}
-{#                        .append("tr");#}
-{##}
-{#                selec_table#}
-{#                        .select("tbody").selectAll("tr").selectAll("td")#}
-{#                        .data(ordered_values(jdata[res]["stats"], const_keyorder))#}
-{#                        .enter()#}
-{#                        .append("td");#}
-{##}
-{#                selec_table#}
-{#                        .select("tbody").selectAll("tr").selectAll("td")#}
-{#                        .data(d3.values(jdata[res]["stats"]))#}
-{#                        .exit()#}
-{#                        .remove();#}
-{##}
-{#                selec_table#}
-{#                        .select("tbody").selectAll("tr").selectAll("td")#}
-{#                        .data(ordered_values(jdata[res]["stats"], const_keyorder))#}
-{#//                        .data(d3.values(jdata[res]["stats"]))#}
-{#                        .text(function (d) {#}
-{#                            return d;#}
-{#                        });#}
-{##}
-{#                selec_table#}
-{#                        .data(Array(jdata[res]["stats"]))#}
-{#                        .exit()#}
-{#                        .remove();#}
-{##}
-{##}
-{#                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")#}
-{#                        .selectAll("div.history");#}
-{##}
-{#                selec_box#}
-{#                        .data(Array(jdata[res]["history"]))#}
-{#                        .enter()#}
-{#                        .append("div")#}
-{#                        .attr("class", "history box")#}
-{#                        .style("width", box_wid + "px").style("height", box_hei + "px");#}
-{##}
-{#                selec_box#}
-{#                        .data(Array(jdata[res]["history"]))#}
-{#                        .exit()#}
-{#                        .remove();#}
-{##}
-{#                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")#}
-{#                        .selectAll("div.v-bar");#}
-{##}
-{#                selec_box#}
-{#                        .data(jdata[res]["history"])#}
-{#                        .enter()#}
-{#                        .append("div")#}
-{#                        .attr("class", "v-bar")#}
-{#                        .style("visibility", "hidden")#}
-{#                        .append("span");#}
-{#//                        .text(get_seq);#}
-{##}
-{#                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")#}
-{#                        .selectAll("div.v-bar");#}
-{##}
-{#                selec_box#}
-{#                        .data(jdata[res]["history"])#}
-{#                        .exit()#}
-{#                        .remove();#}
-{##}
-{#                selec_box#}
-{#                        .data(jdata[res]["history"])#}
-{#                        .attr("class", "v-bar")#}
-{#                        .style("height", get_hei)#}
-{#                        .style("left", function (d, i) {#}
-{#                            return (2 + i * 27) + "px"#}
-{#                        })#}
-{#                        .style("background-color", get_color)#}
-{#                        .style("visibility", "visible")#}
-{#                        .select("span")#}
-{#                        .text(get_seq);#}
-{#            }#}
-{#        });#}
-{#    };#}
-{##}
-{#    var get_hostname = function (d) {#}
-{#        return d["host"];#}
-{#    };#}
-{##}
-{#    var get_rtt = function (d) {#}
-{#        return d["rtt"];#}
-{#    };#}
-{##}
-{#    var get_seq = function (d) {#}
-{#        return d["seq"];#}
-{#    };#}
-{##}
-{#    var get_hei = function (d) {if (d["rtt"] == const_timeout) {#}
-{#            return min_height + "px"#}
-{#        };#}
-{#//        return (Math.ceil(get_rtt(d) / scale_bar) * 30) + "px";#}
-{#        return (Math.ceil(get_rtt(d) / scale_bar) * scale_unit + min_height) + "px";#}
-{#//        return (get_rtt(d) * 100) + "px";#}
-{#    };#}
-{##}
-{#    var get_color = function(d) {#}
-{#        if (d["rtt"] == const_timeout) {#}
-{#            return "#9E446B"#}
-{#        };#}
-{#        return "#7783d7";#}
-{#    };#}
-{##}
-{#    var ordered_values = function (dict, key_order) {#}
-{#        var val_order = [];#}
-{#        for (var k in key_order) {#}
-{#            var key = key_order[k];#}
-{#            var val = dict[key];#}
-{##}
-{#            if (key == "avg") {#}
-{#                val = fmt_nanosec(val);#}
-{#            } else if (key == "loss") {#}
-{#                val = fmt_percent(val);#}
-{#            };#}
-{##}
-{#            val_order.push(val);#}
-{#        };#}
-{#        return val_order;#}
-{#    };#}
-{##}
-{#    // setInterval(render, 2000);#}
-{#    render();#}
 
 </script>
 
