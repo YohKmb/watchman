@@ -4,10 +4,14 @@
 <script type="text/javascript">
 
     var targets = {{ targets|safe }};
+{#    var keyorder = ["host"];#}
+{#    keyorder.concat({{ const_keyorder|safe }});#}
     const const_keyorder = {{ const_keyorder|safe }};
 {#    var targets = {{ targets|safe }};#}
 
     var render = function () {
+        console.log(targets)
+
         d3.select("div.content")
 {#                .selectAll("table")#}
 {#                .data(targets)#}
@@ -15,7 +19,8 @@
                 .append("table").attr("class", "pure-table");
 
         var selec = d3.select("div.content")
-                .selectAll("table");
+                .selectAll("table")
+                .style("margin", "50px");
 
         selec
                 .append("thead");
@@ -32,26 +37,43 @@
                     return d.charAt(0).toUpperCase() + d.slice(1);
                 });
 
+        selec
+                .select("tbody")
+                .selectAll("tr")
+                .data(d3.keys(targets))
+                .enter()
+                .append("tr")
+                .attr("id", function(d){
+                    return d;
+                });
+
         for (var targ in targets) {
 
 {#            console.log(targ)#}
-            selec
-                        .select("tbody")
-                        .selectAll("tr")
-                        .data(Array(targets[targ]))
-                        .enter()
-                        .append("tr");
+{#            selec#}
+{#                    .select("tbody")#}
+{#                    .selectAll("tr")#}
+{#                    .data(Array(targets[targ]))#}
+{#                    .enter()#}
+{#                    .append("tr")#}
+{##}
+{#                                selec#}
+{#                                        .select("tbody")#}
+{#                                            .selectAll("tr")#}
+{#                    .select("tr")#}
+            selec = d3.select("div.content table tbody");
+{#                    .select("tbody");#}
 
             selec
-                    .select("tbody")
-                        .selectAll("tr").
-                        selectAll("td")
-                        .data(ordered_values(targets[targ], const_keyorder))
-                        .enter()
-                        .append("td")
-                        .text(function (d) {
-                            return d;
-                        });
+                    .select('tr[id="' + targ + '"]')
+                    .selectAll("td")
+                    .data(ordered_values(targets[targ], const_keyorder))
+                    .enter()
+                    .append("td")
+                    .style("font-size", "inherit")
+                    .text(function (d) {
+                        return d;
+                    });
 
 {#            selec_table#}
 {#                    .selectAll("thead")#}

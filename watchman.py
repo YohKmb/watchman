@@ -62,7 +62,7 @@ def main_page():
 @app.route("/config_test")
 def config_test():
     return render_template("config_test.html", targets=json.dumps(targets),
-                           const_keyorder=["description", "enabled", "ssh"])
+                           const_keyorder=["host", "description", "enabled", "ssh"])
 
 
 def _load_config(path_conf):
@@ -86,6 +86,9 @@ def _get_targets_enabled(path_conf="./targets.config"):
     if not targets:
         print("No valid target was found. Failback and use example targets instead.")
         targets = TARGETS_SAMPLE
+
+    for targ in targets.keys():
+        targets[targ]["host"] = targ
 
     return [targ for targ in targets.keys() if targets[targ]["enabled"]]
 
