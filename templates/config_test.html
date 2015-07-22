@@ -4,22 +4,29 @@
 <script type="text/javascript">
 
     var targets = {{ targets|safe }};
-{#    var keyorder = ["host"];#}
-{#    keyorder.concat({{ const_keyorder|safe }});#}
     const const_keyorder = {{ const_keyorder|safe }};
-{#    const const_keyorder = {{ const_keyorder|safe }}.concat("del");#}
 
     var render = function () {
 
         var selec = d3.select("div.content")
+                .selectAll("div")
+                .data(Array(const_keyorder))
+                .enter()
+                .append("div")
+                .attr("class", "form-div");
+{#                .attr("class", "pure-form pure-form-aligned")#}
+{#                .append("fieldset");#}
+
+        selec = d3.select("div.content div.form-div")
                 .selectAll("form")
                 .data(Array(const_keyorder))
                 .enter()
                 .append("form")
                 .attr("class", "pure-form pure-form-aligned")
                 .append("fieldset");
+{#                .style("border", "#969696 solid 2px");#}
 
-        selec = d3.select("div.content form fieldset");
+        selec = d3.select("div.content div.form-div form fieldset");
         selec
                 .selectAll("div")
                 .data(const_keyorder)
@@ -36,7 +43,7 @@
 {#            console.log(const_keyorder);#}
             console.log(colname);
 
-            selec = d3.select("div.content form fieldset")
+            selec = d3.select("div.content div.form-div form fieldset")
                     .select('div.pure-control-group[id="form_' + colname + '"]');
             selec
                     .selectAll("label")
@@ -55,13 +62,7 @@
                     .attr("id", colname)
                     .attr("type", "text");
 
-{#            <input id="name" type="text" placeholder="Username">#}
         };
-
-
-{#        selec = d3.select("div.content form fieldset")#}
-{#                .selectAll("div.pure-control-group")#}
-{#                .#}
 
         selec
                 .selectAll("div.pure-control-group")
@@ -69,14 +70,49 @@
                 .exit()
                 .remove();
 
+        selec = d3.select("div.content div.form-div");
+{#                .selectA("");#}
+        selec
+                .selectAll("div.change-div")
+                .data(Array(targets))
+                .enter()
+                .append("div")
+                .attr("class", "change-div");
 
-{#        var selec = d3.select("div.content")#}
+        selec = d3.select("div.content div.form-div")
+                .select("div.change-div");
+        selec
+                .selectAll("input")
+                .data(["submit", "revert"])
+                .enter()
+                .append("input")
+                .attr("class", "pure-button enabledisable")
+                .style("background-color", function(d){
+                    if(d == "submit"){
+                        return "blue";
+                    } else {
+                        return "red"
+                    };
+                })
+                .attr("type", "button")
+                .attr("value", capitarize);
+{#        selec#}
+{#                .selectAll("input")#}
+{#                .data(Array(const_keyorder))#}
+{#                .enter()#}
+{#                .append("input")#}
+{#                .attr("class", "pure-button enabledisable")#}
+{#                .style("background-color", "red")#}
+{#                .attr("type", "button")#}
+{#                .attr("value", "revert");#}
+
+
         selec = d3.select("div.content")
                 .selectAll("table")
                 .data(Array(targets))
                 .enter()
-                .append("table").attr("class", "pure-table pure-table-bordered")
-                .style("margin", "50px");
+                .append("table")
+                .attr("class", "pure-table pure-table-bordered");
 
         selec = d3.select("div.content table");
         selec
@@ -93,15 +129,11 @@
 
         selec
                 .select("div.content table thead")
-{#                .select("thead")#}
                 .selectAll("th")
                 .data(const_keyorder)
                 .enter()
                 .append("th")
-                .text(capitarize)
-{#                .text(function (d) {#}
-{#                    return d.charAt(0).toUpperCase() + d.slice(1);#}
-{#                });#}
+                .text(capitarize);
 
         selec
                 .select("tbody")
@@ -128,18 +160,6 @@
                     console.log(d);
                     return d;
                 });
-
-{#        d3.select("div.content")#}
-{#                .selectAll("table")#}
-{#                .data(Array(targets))#}
-{#                .exit()#}
-{#                .remove();#}
-{##}
-{#        var selec = d3.select("div.content")#}
-{#                .selectAll("form")#}
-{#                .data(Array(const_keyorder))#}
-{#                .exit()#}
-{#                .remove();#}
 
         for (var targ in targets) {
 

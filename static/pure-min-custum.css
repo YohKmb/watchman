@@ -595,10 +595,11 @@ td, th {
 }
 
 .pure-form-aligned .pure-control-group label {
-    text-align: right;
+    text-align: left;
+    /*text-align: right;*/
     display: inline-block;
     vertical-align: middle;
-    width: 10em;
+    width: 5em;
     margin: 0 1em 0 0
 }
 
@@ -1013,3 +1014,6 @@ span {
     background: darkgray;
 }
 
+/*.form-div, .change-div {*/
+    /*float: left;*/
+/*}*/
