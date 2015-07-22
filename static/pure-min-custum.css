@@ -1014,6 +1014,11 @@ span {
     background: darkgray;
 }
 
-/*.form-div, .change-div {*/
-    /*float: left;*/
-/*}*/
+.form-div form {
+    float: left;
+    /*clear: both;*/
+}
+
+.form-div div.change-div {
+    margin-left: 2em;
+}
