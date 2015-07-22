@@ -12,6 +12,66 @@
     var render = function () {
 
         var selec = d3.select("div.content")
+                .selectAll("form")
+                .data(Array(const_keyorder))
+                .enter()
+                .append("form")
+                .attr("class", "pure-form pure-form-aligned")
+                .append("fieldset");
+
+        selec = d3.select("div.content form fieldset");
+        selec
+                .selectAll("div")
+                .data(const_keyorder)
+                .enter()
+                .append("div")
+                .attr("class", "pure-control-group")
+                .attr("id", function(d){
+                    return "form_" + d;
+                });
+
+        for (var idx in const_keyorder) {
+
+            var colname = const_keyorder[idx];
+{#            console.log(const_keyorder);#}
+            console.log(colname);
+
+            selec = d3.select("div.content form fieldset")
+                    .select('div.pure-control-group[id="form_' + colname + '"]');
+            selec
+                    .selectAll("label")
+                    .data(Array(colname))
+                    .enter()
+                    .append("label")
+                    .attr("for", function (d) {
+                        return d;
+                    })
+                    .text(capitarize);
+            selec
+                    .selectAll("input")
+                    .data(Array(colname))
+                    .enter()
+                    .append("input")
+                    .attr("id", colname)
+                    .attr("type", "text");
+
+{#            <input id="name" type="text" placeholder="Username">#}
+        };
+
+
+{#        selec = d3.select("div.content form fieldset")#}
+{#                .selectAll("div.pure-control-group")#}
+{#                .#}
+
+        selec
+                .selectAll("div.pure-control-group")
+                .data(const_keyorder)
+                .exit()
+                .remove();
+
+
+{#        var selec = d3.select("div.content")#}
+        selec = d3.select("div.content")
                 .selectAll("table")
                 .data(Array(targets))
                 .enter()
@@ -19,7 +79,6 @@
                 .style("margin", "50px");
 
         selec = d3.select("div.content table");
-
         selec
                 .selectAll("thead")
                 .data(Array(targets))
@@ -39,9 +98,10 @@
                 .data(const_keyorder)
                 .enter()
                 .append("th")
-                .text(function (d) {
-                    return d.charAt(0).toUpperCase() + d.slice(1);
-                });
+                .text(capitarize)
+{#                .text(function (d) {#}
+{#                    return d.charAt(0).toUpperCase() + d.slice(1);#}
+{#                });#}
 
         selec
                 .select("tbody")
@@ -69,11 +129,17 @@
                     return d;
                 });
 
-        d3.select("div.content")
-                .selectAll("table")
-                .data(Array(targets))
-                .exit()
-                .remove();
+{#        d3.select("div.content")#}
+{#                .selectAll("table")#}
+{#                .data(Array(targets))#}
+{#                .exit()#}
+{#                .remove();#}
+{##}
+{#        var selec = d3.select("div.content")#}
+{#                .selectAll("form")#}
+{#                .data(Array(const_keyorder))#}
+{#                .exit()#}
+{#                .remove();#}
 
         for (var targ in targets) {
 
@@ -174,9 +240,13 @@
         return val_order;
     };
 
-    var onclick_test = function (d) {
-        console.log(d);
+    var capitarize = function (d) {
+        return d.charAt(0).toUpperCase() + d.slice(1);
     };
+
+{#    var onclick_test = function (d) {#}
+{#        console.log(d);#}
+{#    };#}
 
     render();
 
