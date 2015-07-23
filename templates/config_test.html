@@ -91,11 +91,12 @@
                     if(d == "submit"){
                         return "blue";
                     } else {
-                        return "red"
-                    };
+                        return "red";
+                    }
                 })
                 .attr("type", "button")
-                .attr("value", capitarize);
+                .attr("value", capitarize)
+                .on("click", submit_or_revert);
 {#        selec#}
 {#                .selectAll("input")#}
 {#                .data(Array(const_keyorder))#}
@@ -163,20 +164,7 @@
 
         for (var targ in targets) {
 
-{#            console.log(targ)#}
-{#            selec#}
-{#                    .select("tbody")#}
-{#                    .selectAll("tr")#}
-{#                    .data(Array(targets[targ]))#}
-{#                    .enter()#}
-{#                    .append("tr")#}
-{##}
-{#                                selec#}
-{#                                        .select("tbody")#}
-{#                                            .selectAll("tr")#}
-{#                    .select("tr")#}
             selec = d3.select("div.content table tbody");
-{#                    .select("tbody");#}
 
             selec
                     .select('tr[id="' + targ + '"]')
@@ -264,9 +252,22 @@
         return d.charAt(0).toUpperCase() + d.slice(1);
     };
 
-{#    var onclick_test = function (d) {#}
-{#        console.log(d);#}
-{#    };#}
+    var submit_or_revert = function (d) {
+        if (d == "submit") {
+            return "blue";
+        } else {
+            console.log("revert was called");
+            d3.json("http://localhost:5000/targets", function (jdata) {
+                targets = jdata;
+            });
+        };
+{#        console.log("revert_target() was called");#}
+{#        d3.json("http://localhost:5000/targets", function (jdata) {#}
+{#            targets = jdata;#}
+{#        });#}
+        render();
+    };
+
 
     render();
 

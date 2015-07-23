@@ -1020,5 +1020,11 @@ span {
 }
 
 .form-div div.change-div {
-    margin-left: 2em;
+    float: left;
+    margin: 15px;
 }
+
+.form-div div.change-div input {
+    margin: 3px;
+}
+

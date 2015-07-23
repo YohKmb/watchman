@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request
 import json
 import re
 
@@ -45,13 +45,12 @@ def history():
 
     return Response( json.dumps(hists) )
 
-# @app.route("/targets")
-# def targets():
-#     targets = {}
-#     for sender in senders:
-#         targets.update(sender.targets)
-#
-#     return Response( json.dumps(targets) )
+@app.route("/targets", methods=["GET", "POST"])
+def targets():
+    if (request.method == "GET"):
+        return Response( json.dumps(targets) )
+    else:
+        pass
 
 @app.route("/main")
 def main_page():
