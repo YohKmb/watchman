@@ -8,14 +8,15 @@
 
     var render = function () {
 
+        console.log("render is called");
+        console.log(targets);
+
         var selec = d3.select("div.content")
                 .selectAll("div")
                 .data(Array(const_keyorder))
                 .enter()
                 .append("div")
                 .attr("class", "form-div");
-{#                .attr("class", "pure-form pure-form-aligned")#}
-{#                .append("fieldset");#}
 
         selec = d3.select("div.content div.form-div")
                 .selectAll("form")
@@ -24,7 +25,6 @@
                 .append("form")
                 .attr("class", "pure-form pure-form-aligned")
                 .append("fieldset");
-{#                .style("border", "#969696 solid 2px");#}
 
         selec = d3.select("div.content div.form-div form fieldset");
         selec
@@ -38,10 +38,7 @@
                 });
 
         for (var idx in const_keyorder) {
-
             var colname = const_keyorder[idx];
-{#            console.log(const_keyorder);#}
-            console.log(colname);
 
             selec = d3.select("div.content div.form-div form fieldset")
                     .select('div.pure-control-group[id="form_' + colname + '"]');
@@ -96,7 +93,17 @@
                 })
                 .attr("type", "button")
                 .attr("value", capitarize)
-                .on("click", submit_or_revert);
+{#                .on("click", function(d){#}
+{#                    submit_or_revert(d);#}
+{#                    render();#}
+{#                });#}
+{#                .append("a")#}
+{#                .attr("href", "/config_test");#}
+                .on("click", function(){
+                    window.location.reload();
+{#                    window.open("/config_test");#}
+                });
+{#                .on("click", submit_or_revert);#}
 {#        selec#}
 {#                .selectAll("input")#}
 {#                .data(Array(const_keyorder))#}
@@ -113,7 +120,8 @@
                 .data(Array(targets))
                 .enter()
                 .append("table")
-                .attr("class", "pure-table pure-table-bordered");
+                .attr("class", "pure-table pure-table-bordered")
+                .style("clear", "both");
 
         selec = d3.select("div.content table");
         selec
@@ -158,7 +166,7 @@
                 .selectAll("tr")
                 .data(d3.keys(targets))
                 .attr("id", function (d) {
-                    console.log(d);
+{#                    console.log(d);#}
                     return d;
                 });
 
@@ -229,9 +237,9 @@
                     .attr("value", "Delete")
                     .on("click", function(){
                         var targ_id = this.parentNode.id;
-                        console.log(targ_id);
+{#                        console.log(targ_id);#}
                         delete targets[targ_id];
-                        console.log(targets);
+{#                        console.log(targets);#}
                         render();
                     });
 
@@ -258,13 +266,10 @@
         } else {
             console.log("revert was called");
             d3.json("http://localhost:5000/targets", function (jdata) {
+{#                console.log(jdata);#}
                 targets = jdata;
-            });
-        };
-{#        console.log("revert_target() was called");#}
-{#        d3.json("http://localhost:5000/targets", function (jdata) {#}
-{#            targets = jdata;#}
-{#        });#}
+            })
+        }
         render();
     };
 

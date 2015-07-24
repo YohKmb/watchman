@@ -77,9 +77,7 @@ class ICMP_Request(ICMP):
     def __init__(self, id, seq, t_send):
         super(ICMP_Request, self).__init__()
         
-        # Temporary header whose checksum is set to 0
         chsum = 0
-
         req_header = struct.pack(ICMP_Request.PROTO_STRUCT_FMT,
                                  ICMP_Request.ICMP_ECHO_REQ, 0, chsum, id, seq)
 
@@ -95,13 +93,7 @@ class ICMP_Request(ICMP):
         self._time = t_send
 
     def __repr__(self):
-        # print "repr"
         return self._packet
-
-    # def __str__(self):
-    #     print "str"
-    #     return  self._packet
-    #     # return pickle.dump(self._packet)
 
     @property
     def time(self):
@@ -116,8 +108,6 @@ class ICMP_Request(ICMP):
         # Tuple format := ("type", "code", "checksum", "id", "seq")
         req_header = struct.pack(ICMP_Request.PROTO_STRUCT_FMT,
                                  ICMP_Request.ICMP_ECHO_REQ, 0, chsum, id, seq)
-
-        # t_send = default_timer()
 
         data = (64 - ICMP.NBYTES_TIME) * "P"
         data = struct.pack("d", t_send) + data
