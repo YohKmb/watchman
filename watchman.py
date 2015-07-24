@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
-from flask import Flask, render_template, Response, request
+from flask import Flask, render_template, Response, request, jsonify
 import json
 import re
 
@@ -47,10 +47,17 @@ def history():
 
 @app.route("/targets", methods=["GET", "POST"])
 def targets():
+    global targets
+
     if (request.method == "GET"):
         return Response( json.dumps(targets) )
-    else:
-        pass
+
+    elif (request.headers['Content-Type'] == 'application/json'):
+        print request.json
+        targets = request.json
+        return jsonify(res='recept'), 200
+
+    return jsonify(res='error'), 400
 
 @app.route("/main")
 def main_page():

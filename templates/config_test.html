@@ -99,11 +99,11 @@
 {#                });#}
 {#                .append("a")#}
 {#                .attr("href", "/config_test");#}
-                .on("click", function(){
-                    window.location.reload();
+{#                .on("click", function(){#}
+{#                    window.location.reload();#}
 {#                    window.open("/config_test");#}
-                });
-{#                .on("click", submit_or_revert);#}
+{#                });#}
+                .on("click", submit_or_revert);
 {#        selec#}
 {#                .selectAll("input")#}
 {#                .data(Array(const_keyorder))#}
@@ -260,18 +260,47 @@
         return d.charAt(0).toUpperCase() + d.slice(1);
     };
 
+    var post_targets = function (post_data) {
+        var endp_url = "/targets";
+
+        d3.json(endp_url, function (error, data) {
+            console.log(error);
+            console.log(data);
+        })
+                .header("Content-Type", "application/json")
+                .send("POST", JSON.stringify(post_data));
+{#        var post_data = '{"params": {}, "jsonrpc": "2.0", "method": "foo.method", "id": "bar"}';#}
+{#        console.log(d3.xhr(endp_url)#}
+{#                        .header("Content-Type", "application/json")#}
+{#                        .post(post_data, function (error, data) {#}
+{#                            console.log(error);#}
+{#                            console.log(data);#}
+{#                        })#}
+{#        );#}
+    };
+
+    var reload_as_revert = function () {
+        window.location.reload();
+    };
+
     var submit_or_revert = function (d) {
         if (d == "submit") {
-            return "blue";
+            post_targets(targets);
         } else {
-            console.log("revert was called");
-            d3.json("http://localhost:5000/targets", function (jdata) {
-{#                console.log(jdata);#}
-                targets = jdata;
-            })
+            reload_as_revert();
         }
-        render();
     };
+{#        if (d == "submit") {#}
+{#            return "blue";#}
+{#        } else {#}
+{#            console.log("revert was called");#}
+{#            d3.json("http://localhost:5000/targets", function (jdata) {#}
+{#                console.log(jdata);#}
+{#                targets = jdata;#}
+{#            })#}
+{#        }#}
+{#        render();#}
+{#    };#}
 
 
     render();
