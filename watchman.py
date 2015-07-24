@@ -5,6 +5,7 @@
 from flask import Flask, render_template, Response, request, jsonify
 import json
 import re
+import os
 
 from lib import pinger
 
@@ -25,6 +26,8 @@ TARGETS_SAMPLE = {
         "ssh": False
     }
 }
+
+DEFAULT_CONFIGFILE = "./targets.config"
 
 app = Flask(__name__)
 senders, receiver = None, None
@@ -55,6 +58,8 @@ def targets():
     elif (request.headers['Content-Type'] == 'application/json'):
         print request.json
         targets = request.json
+        _save_config(targets)
+
         return jsonify(res='recept'), 200
 
     return jsonify(res='error'), 400
@@ -86,7 +91,17 @@ def _load_config(path_conf):
 
     return dict_targets
 
-def _get_targets_enabled(path_conf="./targets.config"):
+def _save_config(dict_targets, path_conf):
+    try:
+        with open(path_conf, "w") as wdf:
+            json.dump(dict_targets, wdf)
+            print os.getcwd()
+            print("Config was saved successfully.")
+
+    except IOError as excpt:
+        print excpt.message
+
+def _get_targets_enabled(path_conf):
     global targets
     targets = _load_config(path_conf)
 
@@ -100,7 +115,9 @@ def _get_targets_enabled(path_conf="./targets.config"):
     return [targ for targ in targets.keys() if targets[targ]["enabled"]]
 
 if __name__ == "__main__":
-    targets_list = _get_targets_enabled()
+    path_conf = os.path.join(os.path.dirname(__file__), DEFAULT_CONFIGFILE)
+    # print(os.path.abspath(os.path.dirname(__file__)))
+    targets_list = _get_targets_enabled(path_conf)
     # senders, receiver = pinger.generate_pingers(targets=["localhost"])
     # senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.167"])
     # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu", "www.google.com"])
@@ -111,3 +128,4 @@ if __name__ == "__main__":
         app.run(debug=False)
     finally:
         pinger.stop_pingers(senders, receiver)
+        print("Here, the {0} ends.".format(__name__))
