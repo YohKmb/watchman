@@ -517,8 +517,9 @@ def stop_pingers(senders, receiver=None):
 def restart_pingers(targets, senders_current):
     # print "restart with " + str(targets)
     stop_pingers(senders_current)
-    senders_new = Pinger.generate_senders(targets)
     Pinger.reset_results()
+    
+    senders_new = Pinger.generate_senders(targets)
 
     start_pingers(senders_new, is_fg=False)
 

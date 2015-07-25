@@ -136,7 +136,6 @@ def _get_targets_enabled(path_conf):
 
 if __name__ == "__main__":
     path_conf = os.path.join(os.path.dirname(__file__), DEFAULT_CONFIGFILE)
-    # print(os.path.abspath(os.path.dirname(__file__)))
     targets_list = _get_targets_enabled(path_conf)
     # senders, receiver = pinger.generate_pingers(targets=["localhost"])
     # senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.167"])
