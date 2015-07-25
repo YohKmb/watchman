@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 
 
-from flask import Flask, render_template, Response, request, jsonify, redirect
-import json
-import re
-import os
+from flask import Flask, render_template, Response, request, jsonify #, redirect
+import json, re, os, time
 
 from lib import pinger
 
@@ -72,6 +70,7 @@ def _restart():
     targets_list = _get_targets_enabled(path_conf)
 
     senders = pinger.restart_pingers(targets_list, senders)
+    time.sleep(0.5)
     # print("restart was called")
     # return main_page()
     return jsonify(res='recept'), 200
@@ -83,11 +82,10 @@ def main_page():
                            const_timeout=pinger.ResultPing.TIMEOUT,
                            const_keyorder=keyorder)
 
-@app.route("/config_test")
+@app.route("/config")
 def config_test():
-    return render_template("config_test.html", targets=json.dumps(targets),
+    return render_template("config.html", targets=json.dumps(targets),
                            const_keyorder=["host", "description", "enabled", "ssh"])
-                           # const_keyorder=["host", "description", "enabled", "ssh", "delete"])
 
 
 def _load_config(path_conf):

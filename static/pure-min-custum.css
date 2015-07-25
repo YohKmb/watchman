@@ -1014,17 +1014,30 @@ span {
     background: darkgray;
 }
 
+.restart {
+    color: darkviolet;
+    padding: 0.8em 1em;
+    margin-bottom: 0.8em;
+    font-size: 90%;
+    border-radius: 7px;
+    border: 2px solid #5a0080;
+    background: lavender;
+}
+
 .form-div form {
     float: left;
     /*clear: both;*/
 }
 
-.form-div div.change-div {
+.form-div div.button-div {
     float: left;
     margin: 15px;
 }
 
-.form-div div.change-div input {
+.form-div div.button-div input {
     margin: 3px;
 }
 
+div.header div.button-div {
+    margin-left: 80%;
+}

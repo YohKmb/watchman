@@ -25,9 +25,9 @@
 
     var render = function () {
         d3.json("http://localhost:5000/history", function (jdata) {
-            var selec_box = d3.select("div.content").selectAll("div.box");
+            var selec = d3.select("div.content").selectAll("div.box");
 
-            selec_box
+            selec
                     .data(jdata)
                     .enter()
                     .append("div").attr("class", "box")
@@ -37,7 +37,7 @@
             //selec_box = d3.select("div.content")
             //        .selectAll("div.box");
 
-            selec_box
+            selec
                     .selectAll("div.box")
                     .data(jdata)
                     .exit()
@@ -115,25 +115,25 @@
                         .remove();
 
 
-                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
+                selec = d3.select("div.content div.box[id='" + jdata[res]["host"] + "']")
                         .selectAll("div.history");
 
-                selec_box
+                selec
                         .data(Array(jdata[res]["history"]))
                         .enter()
                         .append("div")
                         .attr("class", "history box")
                         .style("width", box_wid + "px").style("height", box_hei + "px");
 
-                selec_box
+                selec
                         .data(Array(jdata[res]["history"]))
                         .exit()
                         .remove();
 
-                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")
+                selec = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")
                         .selectAll("div.v-bar");
 
-                selec_box
+                selec
                         .data(jdata[res]["history"])
                         .enter()
                         .append("div")
@@ -142,15 +142,15 @@
                         .append("span");
 //                        .text(get_seq);
 
-                selec_box = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")
+                selec = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")
                         .selectAll("div.v-bar");
 
-                selec_box
+                selec
                         .data(jdata[res]["history"])
                         .exit()
                         .remove();
 
-                selec_box
+                selec
                         .data(jdata[res]["history"])
                         .attr("class", "v-bar")
                         .style("height", get_hei)

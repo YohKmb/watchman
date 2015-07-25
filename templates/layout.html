@@ -26,7 +26,7 @@
 
             <ul class="pure-menu-list">
                 <li class="pure-menu-item"><a href="/main" class="pure-menu-link">Monitoring</a></li>
-                <li class="pure-menu-item"><a href="#" class="pure-menu-link">Configuration</a></li>
+                <li class="pure-menu-item"><a href="/config" class="pure-menu-link">Configuration</a></li>
             </ul>
         </div>
     </div>
@@ -43,7 +43,37 @@
                          alt="nightawl">
                 </div>
             </figure>
+
+            <div class="button-div">
+                <input class="pure-button restart" type="button" value="Restart" id="restart">
+            </div>
+
         </div>
+        <script>
+
+            var rpc_restart = function () {
+                var endp_url = "/_restart";
+                var post_data = {"command":"restart"};
+
+                d3.json(endp_url, function (error, data) {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.log(data);
+                        window.location = "/main";
+{#                        window.location.reload();#}
+
+                    }
+                })
+                        .header("Content-Type", "application/json")
+                        .send("GET");
+{#                        .send("POST", JSON.stringify(post_data));#}
+            };
+
+            d3.select("div.header div.button-div input#restart")
+                    .on("click", rpc_restart);
+
+        </script>
 
         <div class="content">
             {% block body %}{% endblock %}
