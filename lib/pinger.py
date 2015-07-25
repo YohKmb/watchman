@@ -209,6 +209,8 @@ class Pinger(Thread):
     _history = SafeDict(lambda: deque(maxlen=20))
     _stats = SafeDict(lambda: StatsPing(0, 0, 0, 0)) # Its key is addr and its val is StatsPing instance
 
+    lock_debug = Lock()
+
     def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False):
 
         super(Pinger, self).__init__()
@@ -231,6 +233,24 @@ class Pinger(Thread):
         self.daemon = True
         self._ev = Event()
 
+    @classmethod
+    def reset_results(cls):
+        with cls.seqs as seqs:
+            seqs.clear()
+
+            with cls._queue as queue:
+                queue.clear()
+            with cls._history as history:
+                history.clear()
+            with cls._stats as stats:
+                stats.clear()
+
+        # cls.seqs = SafeDict(lambda: 1)
+        # cls._queue = SafeDict(lambda: {})
+        #
+        # cls._history = SafeDict(lambda: deque(maxlen=20))
+        # cls._stats = SafeDict(lambda: StatsPing(0, 0, 0, 0)) # Its key is addr and its val is StatsPing instance
+
     def run(self):
         try:
             with closing(socket.socket(family=socket.AF_INET, type=socket.SOCK_RAW,
@@ -245,6 +265,7 @@ class Pinger(Thread):
                         break
 
                 self._post_loop()
+                # print "Going to end " + str(self)
 
         except socket.error as excpt:
             logging.error(excpt.__class__)
@@ -281,6 +302,9 @@ class Pinger(Thread):
 
     def _send(self, sock):
         results = []
+        with self.__class__.lock_debug:
+            print str(current_thread()) + " has targets : " + str(self.targets)
+
         for target in self.targets.keys():
             res = self._send_one(sock, target)
             results.append(res)
@@ -303,7 +327,7 @@ class Pinger(Thread):
 
                         if seq in queue[res.addr]:
                             del queue[res.addr][seq]
-                            print "del queuq seq {0} : recv".format(seq)
+                            # print "del queuq seq {0} : recv".format(seq)
 
                             history[res.addr].append(res.as_record() )
 
@@ -312,7 +336,7 @@ class Pinger(Thread):
                         # print stats_current
                         stats[res.addr] = stats_current.update_recv(res)
 
-                print res
+                # print res
                 return res
                 # return ResultPing(addr, seq, resp_time)
 
@@ -380,13 +404,15 @@ class Pinger(Thread):
     @classmethod
     def _slice_lists(cls, z, splited=[]):
 
+        united = splited[::]
+
         if len(z) > 5:
-            splited.append(z[:5])
-            return cls._slice_lists(z[5:], splited)
+            united.append(z[:5])
+            return cls._slice_lists(z[5:], united)
 
         else:
-            splited.append(z)
-            return splited
+            united.append(z)
+            return united
 
     @classmethod
     def _resolve_name(cls, targets):
@@ -394,7 +420,7 @@ class Pinger(Thread):
         resolved = []
         removed = []
         for target in targets:
-            print target
+            # print target
             try:
                 addr_dst = socket.gethostbyname(target)
                 # print str(target) + " = " + str(addr_dst)
@@ -405,13 +431,18 @@ class Pinger(Thread):
                 removed.append(target)
 
         targets = [target for target in targets if target not in removed]
+        print "before slicing : " + str(targets)
+        # print targets
         sliced_tuples = cls._slice_lists(zip(resolved, targets))
 
         return [dict(tup) for tup in sliced_tuples]
 
     @classmethod
     def generate_senders(cls, targets):
+        print targets
+
         grps_target = cls._resolve_name(targets)
+        print grps_target
 
         senders = []
         for grp in grps_target:
@@ -431,9 +462,9 @@ def get_parser():
 
     return parser
 
-def generate_pingers(targets=[]):
+def generate_pingers(targets_list=[]):
 
-    if not targets:
+    if not targets_list:
         parser = get_parser()
         args = parser.parse_args()
 
@@ -442,19 +473,20 @@ def generate_pingers(targets=[]):
             parser.print_help()
             sys.exit(1)
 
-        targets = args.targets
+        targets_list = args.targets
 
-    senders = Pinger.generate_senders(targets)
+    senders = Pinger.generate_senders(targets_list)
     receiver = Pinger(is_receiver=True)
 
     return senders, receiver
 
-def start_pingers(senders, receiver, is_fg=True):
+def start_pingers(senders, receiver=None, is_fg=True):
     try:
         for sender in senders:
             sender.start()
 
-        receiver.start()
+        if receiver:
+            receiver.start()
 
         while is_fg:
             raw_input()
@@ -467,17 +499,30 @@ def start_pingers(senders, receiver, is_fg=True):
     logging.info("pingers started")
     return None
 
-def stop_pingers(senders, receiver):
+def stop_pingers(senders, receiver=None):
 
         for sender in senders:
             sender.end()
-        receiver.end()
+        if receiver:
+            receiver.end()
 
         for sender in senders:
             sender.join()
-        receiver.join()
+            print "stopped " + str(sender)
+        if receiver:
+            receiver.join()
 
         return None
+
+def restart_pingers(targets, senders_current):
+    # print "restart with " + str(targets)
+    stop_pingers(senders_current)
+    senders_new = Pinger.generate_senders(targets)
+    Pinger.reset_results()
+
+    start_pingers(senders_new, is_fg=False)
+
+    return senders_new
 
 
 if __name__ == "__main__":
