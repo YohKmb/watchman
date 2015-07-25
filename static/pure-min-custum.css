@@ -990,6 +990,14 @@ span {
     font-size: 10px;
 }
 
+.content {
+    float: left;
+}
+
+div.content>div.box {
+    margin-left: 10%;
+}
+
 .history {
     float: right;
 }

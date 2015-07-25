@@ -209,7 +209,7 @@ class Pinger(Thread):
     _history = SafeDict(lambda: deque(maxlen=20))
     _stats = SafeDict(lambda: StatsPing(0, 0, 0, 0)) # Its key is addr and its val is StatsPing instance
 
-    lock_debug = Lock()
+    # lock_debug = Lock()
 
     def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False):
 
@@ -302,8 +302,8 @@ class Pinger(Thread):
 
     def _send(self, sock):
         results = []
-        with self.__class__.lock_debug:
-            print str(current_thread()) + " has targets : " + str(self.targets)
+        # with self.__class__.lock_debug:
+        #     print str(current_thread()) + " has targets : " + str(self.targets)
 
         for target in self.targets.keys():
             res = self._send_one(sock, target)

@@ -6,6 +6,11 @@
     var targets = {{ targets|safe }};
     const const_keyorder = {{ const_keyorder|safe }};
 
+    var new_target = {"host":"", "description":"", "enabled":true, "ssh":""};
+
+    d3.select("div.content")
+            .style("float", "none");
+
     var render = function () {
 
         console.log("render is called");
@@ -57,7 +62,10 @@
                     .enter()
                     .append("input")
                     .attr("id", colname)
-                    .attr("type", "text");
+                    .attr("type", appropriate_input_type(colname))
+                    .attr("checked", checked_if_enabled)
+                    .attr("value", sync_inputs_w_var(colname))
+                    .attr(disable_notsupport_yet(colname), disable_notsupport_yet(colname));
 
         };
 
@@ -282,20 +290,52 @@
             reload_as_revert();
         }
     };
-{#        if (d == "submit") {#}
-{#            return "blue";#}
-{#        } else {#}
-{#            console.log("revert was called");#}
-{#            d3.json("http://localhost:5000/targets", function (jdata) {#}
-{#                console.log(jdata);#}
-{#                targets = jdata;#}
-{#            })#}
+
+    var appropriate_input_type = function (colname) {
+        if (colname == "enabled") {
+            return "checkbox";
+        } else {
+            return "text";
+        }
+    };
+
+    var sync_inputs_w_var = function (colname) {
+        return new_target[colname];
+    };
+
+    var checked_if_enabled = function (colname) {
+        if (colname == "enabled") {
+            return "checked";
+        }
+
+        return "";
+    };
+
+    var disable_notsupport_yet = function (colname) {
+        if (colname == "ssh") {
+            return "disabled"
+        }
+        return "enabled";
+    };
+
+{#    var initialize_inputs = function () {#}
+{#        var selec_inputs = d3.select("div.content div.form-div fieldset")#}
+{#                .selectAll("input");#}
+{##}
+{#        console.log(selec_inputs[0]);#}
+{#        for (var inp in selec_inputs) {#}
+{#            console.log(selec_inputs[inp]);#}
+{#            console.log(selec_inputs[inp]["id"]);#}
 {#        }#}
-{#        render();#}
+{#        selec_inputs#}
+{#                .data(d3.keys(new_target));#}
+{##}
+{#        return;#}
 {#    };#}
 
 
     render();
+{#    initialize_inputs();#}
 
 </script>
 
