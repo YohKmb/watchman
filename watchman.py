@@ -58,7 +58,7 @@ def targets():
     if (request.method == "GET"):
         return Response( json.dumps(targets) )
 
-    elif (request.headers['Content-Type'] == 'application/json'):
+    elif ('application/json' in request.headers['Content-Type']):
         # print request.json
         targets = request.json
         _save_config(targets, path_conf)
