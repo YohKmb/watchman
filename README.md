@@ -1,26 +1,27 @@
-nwutils
+watchman (beta)
 ====
 
-This repository contains some utility tools for test or administrate TCP/IP network
+####Graphical ICMP Monitoring Tool
 
 
 ### Description
 
-Utilities include this repository help you test or administrate your network functionalities.
+This repository offers you a browser-based ICMP monitoring tool "watchman" and CLI-based ping utility "lib/pinger.py".
 
- - multipleping : 
+The later is internally used in "watchman".
 
-    This script creates a lot of virtual routed interfaces and attach them to openvswitch birdge.<br>You can create/delete such I/Fs in one-line command.<br>Most of all, this script boasts its ping and logging function.
+ - watchman : 
 
- - eapier : 
+    ...
 
-    This script sends a lot of commands to multiple Arista EOS nodes.<br>Arista RESTful API, a.k.a. eAPI, is used as the management mechanism.
+ - lib/pinger.py : 
 
-Detailed desctiptions and usages are stored in the respective folder of each tools.
+    ...
+
 
 ### Licence
 
-MIT (https://github.com/YohKmb/nwutils/blob/master/LICENSE)
+MIT (https://github.com/YohKmb/watchman/blob/master/LICENSE)
 
 ### Author
 
