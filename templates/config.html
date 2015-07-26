@@ -6,7 +6,7 @@
     var targets = {{ targets|safe }};
     const const_keyorder = {{ const_keyorder|safe }};
 
-    var new_target = {"host":"", "description":"", "enabled":true, "ssh":false};
+    const const_initval_target = {"host":"", "description":"", "enabled":true, "ssh":false};
 
     d3.select("div.content")
             .style("float", "none");
@@ -74,7 +74,7 @@
                     .attr("id", colname)
                     .attr("type", appropriate_input_type(colname))
                     .attr("checked", checked_if_enabled)
-                    .attr("value", sync_inputs_w_var(colname))
+                    .attr("value", set_init_value(colname))
                     .attr(disable_notsupport_yet(colname), disable_notsupport_yet(colname));
 
         };
@@ -139,6 +139,7 @@
                 .enter()
                 .append("table")
                 .attr("class", "pure-table pure-table-bordered")
+                .style("margin-bottom", "2em")
                 .style("clear", "both");
 
         selec = d3.select("div.content table");
@@ -309,8 +310,8 @@
         }
     };
 
-    var sync_inputs_w_var = function (colname) {
-        return new_target[colname];
+    var set_init_value = function (colname) {
+        return const_initval_target[colname];
     };
 
     var checked_if_enabled = function (colname) {
@@ -329,22 +330,32 @@
     };
 
     var update_new_target = function () {
+        var new_target = {};
+
         for (var idx in const_keyorder) {
             var keyname = const_keyorder[idx];
-            var val;
+            var val, succeeded = true;
 
             if (keyname == "enabled") {
                 val = document.getElementById(keyname).checked;
             } else if (keyname == "ssh") {
                 val = false;
             } else {
-                val = document.getElementById(keyname).value;;
+                val = document.getElementById(keyname).value;
+                if (val == "") {
+                    succeeded = false;
+                }
             }
-
+            if (! succeeded) {
+                window.alert("There was a invalid input for new target registration !")
+                return;
+            }
             new_target[keyname] = val;
-{#            new_target[keyname] =  document.getElementById(keyname).value;#}
+{#            const_initval_target[keyname] =  document.getElementById(keyname).value;#}
         }
-        console.log(new_target);
+{#        console.log(const_initval_target);#}
+        targets[new_target["host"]] = new_target;
+        render();
 
         return;
     };
@@ -359,14 +370,13 @@
 {#            console.log(selec_inputs[inp]["id"]);#}
 {#        }#}
 {#        selec_inputs#}
-{#                .data(d3.keys(new_target));#}
+{#                .data(d3.keys(const_initval_target));#}
 {##}
 {#        return;#}
 {#    };#}
 
 
     render();
-{#    initialize_inputs();#}
 
 </script>
 
