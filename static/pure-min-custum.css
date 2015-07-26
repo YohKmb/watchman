@@ -1012,6 +1012,17 @@ div.content>div.box {
     background: orange;
 }
 
+.appendbutton {
+    color: black;
+    /*color: rgb(250, 250, 210);*/
+    padding: 1em 1em;
+    margin-bottom: 2em;
+    font-size: 80%;
+    border-radius: 7px;
+    border: 2px solid darkslateblue;
+    background: ghostwhite;
+}
+
 .enabledisable {
     /*color: rgb(250, 250, 210);*/
     color: white;

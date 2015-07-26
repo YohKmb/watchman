@@ -6,7 +6,7 @@
     var targets = {{ targets|safe }};
     const const_keyorder = {{ const_keyorder|safe }};
 
-    var new_target = {"host":"", "description":"", "enabled":true, "ssh":""};
+    var new_target = {"host":"", "description":"", "enabled":true, "ssh":false};
 
     d3.select("div.content")
             .style("float", "none");
@@ -41,6 +41,16 @@
                 .attr("id", function(d){
                     return "form_" + d;
                 });
+
+        selec
+                .selectAll("input")
+                .data(["append"])
+                .enter()
+                .append("input")
+                .attr("type", "button")
+                .attr("class", "appendbutton")
+                .attr("value", capitarize)
+                .on("click", update_new_target);
 
         for (var idx in const_keyorder) {
             var colname = const_keyorder[idx];
@@ -88,21 +98,21 @@
                 .select("div.button-div");
         selec
                 .selectAll("input")
-                .data(["submit", "revert"])
+                .data(["commit", "revert"])
                 .enter()
                 .append("input")
                 .attr("class", "pure-button enabledisable")
                 .style("background-color", function(d){
-                    if(d == "submit"){
-                        return "blue";
+                    if(d == "commit"){
+                        return "mediumblue";
                     } else {
-                        return "red";
+                        return "crimson";
                     }
                 })
                 .attr("type", "button")
                 .attr("value", capitarize)
 {#                .on("click", function(d){#}
-{#                    submit_or_revert(d);#}
+{#                    commit_or_revert(d);#}
 {#                    render();#}
 {#                });#}
 {#                .append("a")#}
@@ -111,7 +121,7 @@
 {#                    window.location.reload();#}
 {#                    window.open("/config_test");#}
 {#                });#}
-                .on("click", submit_or_revert);
+                .on("click", commit_or_revert);
 {#        selec#}
 {#                .selectAll("input")#}
 {#                .data(Array(const_keyorder))#}
@@ -283,8 +293,8 @@
         window.location.reload();
     };
 
-    var submit_or_revert = function (d) {
-        if (d == "submit") {
+    var commit_or_revert = function (d) {
+        if (d == "commit") {
             post_targets(targets);
         } else {
             reload_as_revert();
@@ -316,6 +326,27 @@
             return "disabled"
         }
         return "enabled";
+    };
+
+    var update_new_target = function () {
+        for (var idx in const_keyorder) {
+            var keyname = const_keyorder[idx];
+            var val;
+
+            if (keyname == "enabled") {
+                val = document.getElementById(keyname).checked;
+            } else if (keyname == "ssh") {
+                val = false;
+            } else {
+                val = document.getElementById(keyname).value;;
+            }
+
+            new_target[keyname] = val;
+{#            new_target[keyname] =  document.getElementById(keyname).value;#}
+        }
+        console.log(new_target);
+
+        return;
     };
 
 {#    var initialize_inputs = function () {#}
