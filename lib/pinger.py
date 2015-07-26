@@ -3,11 +3,6 @@
 
 from __future__ import division
 
-# __author__ = "YohKmb <yoh134shonan@gmail.com>"
-# __status__ = "developping"
-# __version__ = "0.0.1"
-# __date__ = "July 2015"
-
 import socket, struct, array
 import sys, os, time, logging
 import argparse
@@ -34,10 +29,6 @@ class ICMP(object):
     PROTO_CODE = socket.getprotobyname("icmp")
 
     NBYTES_TIME = struct.calcsize("d")
-
-    # def __init__(self):
-    #     super(ICMP, self).__init__()
-    #     return self
 
     def _checksum_wrapper(func):
 
@@ -159,10 +150,6 @@ class ResultPing(namedtuple("Resut_Ping", ("addr", "seq", "rtt"))):
 
 class StatsPing(namedtuple("StatsPing", ("sent", "recv", "avg", "loss"))):
 
-    # def __repr__(self):
-    #     return "{" + "\"Sent\":{0}, \"Recv\":{1}, \"Avg\":{2}, \"Loss\":{3}".format( *tuple(self)) + "}"
-        # return "sent={0}, recv={1}, avg={2}, loss={3}".format( *tuple(self))
-
     def as_record(self):
         asrec = dict(self._asdict())
         asrec["loss"] = self.loss / (self.recv + self.loss)
@@ -188,11 +175,9 @@ class SafeDict(defaultdict):
 
     def __enter__(self):
         self._lock.acquire()
-        # print str(self) + " : locked by " + str(current_thread() )
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # print str(self) + " : released by " + str(current_thread() )
         self._lock.release()
 
 
@@ -209,7 +194,6 @@ class Pinger(Thread):
     _history = SafeDict(lambda: deque(maxlen=20))
     _stats = SafeDict(lambda: StatsPing(0, 0, 0, 0)) # Its key is addr and its val is StatsPing instance
 
-    # lock_debug = Lock()
 
     def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False):
 
@@ -221,13 +205,10 @@ class Pinger(Thread):
         self._intv_ping = intv_ping
 
         if is_receiver:
-            # self._results = defaultdict(lambda: [])
-            # self._history = SafeDict(lambda: deque(maxlen=20))
             self._work_on_myduty = self._recv
             self._lock = Lock()
         else:
             self._targets = SafeDict(**targets)
-            # self._seqs = defaultdict(lambda: 1)
             self._work_on_myduty = self._send
 
         self.daemon = True
@@ -245,12 +226,6 @@ class Pinger(Thread):
             with cls._stats as stats:
                 stats.clear()
 
-        # cls.seqs = SafeDict(lambda: 1)
-        # cls._queue = SafeDict(lambda: {})
-        #
-        # cls._history = SafeDict(lambda: deque(maxlen=20))
-        # cls._stats = SafeDict(lambda: StatsPing(0, 0, 0, 0)) # Its key is addr and its val is StatsPing instance
-
     def run(self):
         try:
             with closing(socket.socket(family=socket.AF_INET, type=socket.SOCK_RAW,
@@ -265,7 +240,6 @@ class Pinger(Thread):
                         break
 
                 self._post_loop()
-                # print "Going to end " + str(self)
 
         except socket.error as excpt:
             logging.error(excpt.message)
@@ -283,7 +257,6 @@ class Pinger(Thread):
 
     @property
     def history(self):
-        # print self.__class__.__dict__
         with self._history as history:
             return history.copy()
 
@@ -302,14 +275,13 @@ class Pinger(Thread):
 
     def _send(self, sock):
         results = []
-        print self.targets.keys()
+        # print self.targets.keys()
 
         for target in self.targets.keys():
             res = self._send_one(sock, target)
             results.append(res)
 
         time.sleep(self._intv_ping)
-        # time.sleep(1.0)
         return results
 
     def _recv(self, sock):
@@ -326,25 +298,21 @@ class Pinger(Thread):
 
                         if seq in queue[res.addr]:
                             del queue[res.addr][seq]
-                            # print "del queuq seq {0} : recv".format(seq)
 
                             history[res.addr].append(res.as_record() )
 
                     with self._stats as stats:
                         stats_current = stats[res.addr]
-                        # print stats_current
                         stats[res.addr] = stats_current.update_recv(res)
 
                 # print res
                 return res
-                # return ResultPing(addr, seq, resp_time)
 
         except socket.timeout as excpt:
             logging.info("receive timeout occurred")
 
         except TypeError as excpt:
             logging.info(excpt.message)
-            # print excpt.message
 
         return None
 
@@ -354,11 +322,8 @@ class Pinger(Thread):
             seq = seqs[addr_dst]
             seqs[addr_dst] += 1
 
-        # seq = self._seqs[addr_dst]
         t_send = default_timer()
         packet = ICMP_Request(self._id, seq, t_send)
-        # packet = ICMP_Request.new_request(self._id, seq, t_send)
-        # self._seqs[addr_dst] += 1
         len_send = 0
 
         try:
@@ -373,21 +338,15 @@ class Pinger(Thread):
                         for out in outs:
                             if out in queue[addr_dst]:
                                 del queue[addr_dst][out]
-                                print "del queuq seq {0} : send".format(out)
+                                # print "del queuq seq {0} : send".format(out)
 
-                            # with self._history as history:
                             history[addr_dst].append( ResultPing(addr_dst, out, ResultPing.TIMEOUT).as_record() )
 
                     queue[addr_dst][seq] = t_send
 
                 with self._stats as stats:
-                    # if len(outs):
-                    #     for out in outs:
-                    #         stats_current = stats[addr_dst]
-
                     stats_current = stats[addr_dst].update_send()
                     stats[addr_dst] = stats_current
-                    # stats[addr_dst] = stats_current.update_send()
 
                     if len(outs):
                         for out in outs:
@@ -399,8 +358,6 @@ class Pinger(Thread):
             logging.warning("failed to sending to {0}".format(addr_dst))
             with self._targets as targets:
                del targets[addr_dst]
-            # pass
-            # raise excpt
 
         return len_send
 
@@ -423,10 +380,8 @@ class Pinger(Thread):
         resolved = []
         removed = []
         for target in targets:
-            # print target
             try:
                 addr_dst = socket.gethostbyname(target)
-                # print str(target) + " = " + str(addr_dst)
                 resolved.append(addr_dst)
 
             except socket.gaierror as excpt:
@@ -434,18 +389,16 @@ class Pinger(Thread):
                 removed.append(target)
 
         targets = [target for target in targets if target not in removed]
-        print "before slicing : " + str(targets)
-        # print targets
+        # print "before slicing : " + str(targets)
         sliced_tuples = cls._slice_lists(zip(resolved, targets))
 
         return [dict(tup) for tup in sliced_tuples]
 
     @classmethod
     def generate_senders(cls, targets):
-        print targets
 
         grps_target = cls._resolve_name(targets)
-        print grps_target
+        # print grps_target
 
         senders = []
         for grp in grps_target:
@@ -518,7 +471,6 @@ def stop_pingers(senders, receiver=None):
         return None
 
 def restart_pingers(targets, senders_current):
-    # print "restart with " + str(targets)
     stop_pingers(senders_current)
     Pinger.reset_results()
     

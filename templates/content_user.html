@@ -1,7 +1,0 @@
-{% extends "layout.html" %}
-{% block body %}
-{% if not user %}
-    {% set user="stranger" %}
-{% endif %}
-    <ul><h3>hello {{ user }} !</h3></ul>
-{% endblock %}

@@ -86,7 +86,6 @@
                 .remove();
 
         selec = d3.select("div.content div.form-div");
-{#                .selectA("");#}
         selec
                 .selectAll("div.button-div")
                 .data(Array(targets))
@@ -111,27 +110,7 @@
                 })
                 .attr("type", "button")
                 .attr("value", capitarize)
-{#                .on("click", function(d){#}
-{#                    commit_or_revert(d);#}
-{#                    render();#}
-{#                });#}
-{#                .append("a")#}
-{#                .attr("href", "/config_test");#}
-{#                .on("click", function(){#}
-{#                    window.location.reload();#}
-{#                    window.open("/config_test");#}
-{#                });#}
                 .on("click", commit_or_revert);
-{#        selec#}
-{#                .selectAll("input")#}
-{#                .data(Array(const_keyorder))#}
-{#                .enter()#}
-{#                .append("input")#}
-{#                .attr("class", "pure-button enabledisable")#}
-{#                .style("background-color", "red")#}
-{#                .attr("type", "button")#}
-{#                .attr("value", "revert");#}
-
 
         selec = d3.select("div.content")
                 .selectAll("table")
@@ -185,7 +164,6 @@
                 .selectAll("tr")
                 .data(d3.keys(targets))
                 .attr("id", function (d) {
-{#                    console.log(d);#}
                     return d;
                 });
 
@@ -234,13 +212,11 @@
                         if(d){
                             return "darkgray";
                         } else {
-{#                            return "darkolivegreen";#}
                             return "cornflowerblue";
                         };
                     })
                     .on("click", function(d){
                         var targ_id = this.parentNode.id;
-{#                        console.log(! d);#}
                         targets[targ_id]["enabled"] = ! d;
                         render();
                     });
@@ -256,12 +232,9 @@
                     .attr("value", "Delete")
                     .on("click", function(){
                         var targ_id = this.parentNode.id;
-{#                        console.log(targ_id);#}
                         delete targets[targ_id];
-{#                        console.log(targets);#}
                         render();
                     });
-
         };
     };
 
@@ -289,7 +262,6 @@
             } else {
                 console.log(data);
                 window.alert("Changes to the target configuration was acceptted !")
-
             }
         })
                 .header("Content-Type", "application/json")
@@ -357,29 +329,12 @@
                 return;
             }
             new_target[keyname] = val;
-{#            const_initval_target[keyname] =  document.getElementById(keyname).value;#}
         }
-{#        console.log(const_initval_target);#}
         targets[new_target["host"]] = new_target;
         render();
 
         return;
     };
-
-{#    var initialize_inputs = function () {#}
-{#        var selec_inputs = d3.select("div.content div.form-div fieldset")#}
-{#                .selectAll("input");#}
-{##}
-{#        console.log(selec_inputs[0]);#}
-{#        for (var inp in selec_inputs) {#}
-{#            console.log(selec_inputs[inp]);#}
-{#            console.log(selec_inputs[inp]["id"]);#}
-{#        }#}
-{#        selec_inputs#}
-{#                .data(d3.keys(const_initval_target));#}
-{##}
-{#        return;#}
-{#    };#}
 
 
     render();

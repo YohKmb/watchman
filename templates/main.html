@@ -34,9 +34,6 @@
                     .attr("id", get_hostname)
                     .style("width", hostdiv_wid + "px").style("height", hostdiv_hei + "px");
 
-            //selec_box = d3.select("div.content")
-            //        .selectAll("div.box");
-
             selec
                     .selectAll("div.box")
                     .data(jdata)
@@ -104,7 +101,6 @@
                 selec_table
                         .select("tbody").selectAll("tr").selectAll("td")
                         .data(ordered_values(jdata[res]["stats"], const_keyorder))
-//                        .data(d3.values(jdata[res]["stats"]))
                         .text(function (d) {
                             return d;
                         });
@@ -140,7 +136,6 @@
                         .attr("class", "v-bar")
                         .style("visibility", "hidden")
                         .append("span");
-//                        .text(get_seq);
 
                 selec = d3.select("div.content div.box[id='" + jdata[res]["host"] + "'] div.history")
                         .selectAll("div.v-bar");
@@ -180,9 +175,7 @@
     var get_hei = function (d) {if (d["rtt"] == const_timeout) {
             return min_height + "px"
         };
-//        return (Math.ceil(get_rtt(d) / scale_bar) * 30) + "px";
         return (Math.ceil(get_rtt(d) / scale_bar) * scale_unit + min_height) + "px";
-//        return (get_rtt(d) * 100) + "px";
     };
 
     var get_color = function(d) {

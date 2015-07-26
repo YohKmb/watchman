@@ -9,6 +9,16 @@ normalize.css v^3.0 | MIT License | git.io/normalize
 Copyright (c) Nicolas Gallagher and Jonathan Neal
 */
 /*! normalize.css v3.0.2 | MIT License | git.io/normalize */
+
+
+/*
+ *  Please note that I customized a style-sheet "pure-min-custum.css" provided by the author to some extent.
+ *
+ *   - Pure.css (https://github.com/yahoo/pure/blob/master/LICENSE.md)
+ *
+ */
+
+
 html {
     font-family: sans-serif;
     -ms-text-size-adjust: 100%;
@@ -938,9 +948,6 @@ td, th {
     border-bottom-width: 0
 }
 
-/*div.header h1 {*/
-    /*font-size: 1.4em;*/
-/*}*/
 
 .header h2 {
     font-size: 1.3em;
@@ -951,7 +958,6 @@ td, th {
     max-height: 150px;
     min-width: 25px;
     background-color: #7783d7;
-    /*margin-right: 2px;*/
     font-size: 10px;
     color: #f0f8ff;
     text-align: center;
@@ -961,11 +967,6 @@ td, th {
     position: absolute;
     bottom: 0px;
     float: right;
-    /*vertical-align: top;*/
-    /*margin-left: 2px;*/
-    /*margin-right: 2px;*/
-    /*padding: 1px;*/
-    /*left: 0;*/
 }
 
 .box {
@@ -977,11 +978,7 @@ td, th {
     border: #969696 solid 2px;
     padding: 0px;
     border-radius: 10px;
-    /*vertical-align: top;*/
-    /*padding: 5px;*/
     position: relative;
-    /*horiz-align: left;*/
-    /*bottom: 0;*/
 }
 
 span {
@@ -1004,7 +1001,6 @@ div.content>div.box {
 
 .delbutton {
     color: white;
-    /*color: rgb(250, 250, 210);*/
     padding: 1em 0.9em;
     font-size: 80%;
     border-radius: 7px;
@@ -1014,7 +1010,6 @@ div.content>div.box {
 
 .appendbutton {
     color: black;
-    /*color: rgb(250, 250, 210);*/
     padding: 1em 1em;
     margin-bottom: 2em;
     font-size: 80%;
@@ -1024,7 +1019,6 @@ div.content>div.box {
 }
 
 .enabledisable {
-    /*color: rgb(250, 250, 210);*/
     color: white;
     padding: 1em 0.9em;
     font-size: 80%;

@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-from flask import Flask, render_template, Response, request, jsonify #, redirect
+from flask import Flask, render_template, Response, request, jsonify
 import json, re, os, time
 
 from lib import pinger
@@ -44,7 +43,6 @@ def history():
     for sender in senders:
         with sender.targets as s_target:
             targets.update(s_target)
-        # targets.update(sender.targets)
 
     hists = [{"host":k, "history":list(v), "stats":stats[k].as_record(), "fqdn":targets[k]}
              for k,v in receiver.history.items() if k in targets ]
@@ -74,10 +72,8 @@ def _restart():
 
     senders = pinger.restart_pingers(targets_list, senders)
     time.sleep(0.5)
-    # print("restart was called")
-    # return main_page()
+
     return jsonify(res='recept'), 200
-    # return redirect("/main")
 
 @app.route("/main")
 def main_page():
@@ -128,22 +124,12 @@ def _get_targets_enabled(path_conf):
 
     return [targ for targ in targets.keys() if targets[targ]["enabled"]]
 
-# def _setup():
-#     global senders, receiver
-#
-#     path_conf = os.path.join(os.path.dirname(__file__), DEFAULT_CONFIGFILE)
-#     targets_list = _get_targets_enabled(path_conf)
-#
-#     senders, receiver = pinger.generate_pingers(targets=targets_list)
-
 
 if __name__ == "__main__":
+
     path_conf = os.path.join(os.path.dirname(__file__), DEFAULT_CONFIGFILE)
     targets_list = _get_targets_enabled(path_conf)
-    # senders, receiver = pinger.generate_pingers(targets=["localhost"])
-    # senders, receiver = pinger.generate_pingers(targets=["localhost", "192.168.1.167"])
-    # senders, receiver = pinger.generate_pingers(targets=["www.kernel.org", "web.mit.edu", "www.google.com"])
-    print targets_list
+
     senders, receiver = pinger.generate_pingers(targets_list=targets_list)
 
     try:
