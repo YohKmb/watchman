@@ -281,6 +281,7 @@
 
     var post_targets = function (post_data) {
         var endp_url = "/targets";
+        console.log(post_data)
 
         d3.json(endp_url, function (error, data) {
             console.log(error);

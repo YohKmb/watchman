@@ -50,7 +50,7 @@ def history():
 
 @app.route("/targets", methods=["GET", "POST"])
 def targets():
-    global targets
+    global targets, path_conf
 
     if (request.method == "GET"):
         return Response( json.dumps(targets) )
@@ -58,7 +58,7 @@ def targets():
     elif (request.headers['Content-Type'] == 'application/json'):
         # print request.json
         targets = request.json
-        _save_config(targets)
+        _save_config(targets, path_conf)
 
         return jsonify(res='recept'), 200
 
