@@ -284,8 +284,13 @@
         console.log(post_data)
 
         d3.json(endp_url, function (error, data) {
-            console.log(error);
-            console.log(data);
+            if (error) {
+                console.log(error);
+            } else {
+                console.log(data);
+                window.alert("Changes to the target configuration was acceptted !")
+
+            }
         })
                 .header("Content-Type", "application/json")
                 .send("POST", JSON.stringify(post_data));
@@ -348,7 +353,7 @@
                 }
             }
             if (! succeeded) {
-                window.alert("There was a invalid input for new target registration !")
+                window.alert("There was a invalid input for new target registration !");
                 return;
             }
             new_target[keyname] = val;

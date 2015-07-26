@@ -226,7 +226,7 @@ class Pinger(Thread):
             self._work_on_myduty = self._recv
             self._lock = Lock()
         else:
-            self._targets = targets
+            self._targets = SafeDict(**targets)
             # self._seqs = defaultdict(lambda: 1)
             self._work_on_myduty = self._send
 
@@ -268,7 +268,7 @@ class Pinger(Thread):
                 # print "Going to end " + str(self)
 
         except socket.error as excpt:
-            logging.error(excpt.__class__)
+            logging.error(excpt.message)
             sys.exit(1)
 
     def end(self):
@@ -302,8 +302,7 @@ class Pinger(Thread):
 
     def _send(self, sock):
         results = []
-        # with self.__class__.lock_debug:
-        #     print str(current_thread()) + " has targets : " + str(self.targets)
+        print self.targets.keys()
 
         for target in self.targets.keys():
             res = self._send_one(sock, target)
@@ -360,6 +359,7 @@ class Pinger(Thread):
         packet = ICMP_Request(self._id, seq, t_send)
         # packet = ICMP_Request.new_request(self._id, seq, t_send)
         # self._seqs[addr_dst] += 1
+        len_send = 0
 
         try:
             len_send = sock.sendto(str(packet), (addr_dst, 0))
@@ -396,8 +396,11 @@ class Pinger(Thread):
                         stats[addr_dst] = stats_current
 
         except socket.error as excpt:
-            logging.error("failed to sending to {0}".format(addr_dst))
-            raise excpt
+            logging.warning("failed to sending to {0}".format(addr_dst))
+            with self._targets as targets:
+               del targets[addr_dst]
+            # pass
+            # raise excpt
 
         return len_send
 

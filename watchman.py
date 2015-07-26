@@ -42,9 +42,12 @@ def history():
     stats = receiver.stats
     targets = {}
     for sender in senders:
-        targets.update(sender.targets)
+        with sender.targets as s_target:
+            targets.update(s_target)
+        # targets.update(sender.targets)
 
-    hists = [{"host":k, "history":list(v), "stats":stats[k].as_record(), "fqdn":targets[k]} for k,v in receiver.history.items() ]
+    hists = [{"host":k, "history":list(v), "stats":stats[k].as_record(), "fqdn":targets[k]}
+             for k,v in receiver.history.items() if k in targets ]
 
     return Response( json.dumps(hists) )
 
