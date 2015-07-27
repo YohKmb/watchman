@@ -17,17 +17,3 @@ setup(
         install_requires = ["Flask>=0.10.1"],
         )
 
-#
-# from distutils.core import setup
-#
-# setup(name='watchman',
-#       version='1.0',
-#       description='Graphical ICMP Monitoring Tool',
-#       author='YohKmb',
-#       author_email='yoh134shonan@gmail.com'
-#       # url='http://www.python.org/sigs/distutils-sig/',
-#       # packages=['distutils', 'distutils.command'],
-#      )
-
-#!/usr/bin/env python
-# coding: utf-8
