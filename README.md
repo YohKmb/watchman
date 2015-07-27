@@ -11,7 +11,7 @@ This repository offers you a browser-based ICMP monitoring tool "watchman" and C
 
 The later is internally used in "watchman".
 
- - watchman : 
+- watchman : 
 
     As demonstrated in the animation above, you can dynamically monitor results and statistics of them of ICMP health-checking to multiple devices.
     Targets of ICMP can be editored from web-base gui. (You can directly modify json file, if you want.)
@@ -25,7 +25,7 @@ The later is internally used in "watchman".
       3) Access to http://localhost:5000/main or http://localhost:5000/ .
       4) Play like the demo animation above.
       
- - lib/pinger.py : 
+- lib/pinger.py : 
 
     Pure-Python ICMP CLI utility tool. At this moment, this can work only on *nix platmfoms. (related to socket allocatin problem)
 
