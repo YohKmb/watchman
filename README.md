@@ -1,4 +1,4 @@
-watchman (beta)
+Watchman (beta)
 ====
 
 Graphical ICMP Monitoring Tool
