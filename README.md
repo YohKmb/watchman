@@ -39,6 +39,12 @@ The later is internally used in "watchman".
 
     At this moment, this package is in beta-version. I'll support windows platforms and ping-springboards via ssh connections.
 
+
+### Requirement
+
+ - Flask >= 0.10.1
+
+
 ### Licence
 
 MIT (https://github.com/YohKmb/watchman/blob/master/LICENSE)
