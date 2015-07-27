@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from flask import Flask, render_template, Response, request, jsonify
+from flask import Flask, render_template, Response, request, jsonify, redirect
 import json, re, os, time
 
 from lib import pinger
@@ -80,6 +80,11 @@ def main_page():
     return render_template("main.html", scale_bar=scale_bar,
                            const_timeout=pinger.ResultPing.TIMEOUT,
                            const_keyorder=keyorder)
+
+@app.route("/")
+def root_page():
+    return redirect("/main")
+
 
 @app.route("/config")
 def config_test():

@@ -17,6 +17,11 @@ The later is internally used in "watchman".
     Targets of ICMP can be editored from web-base gui. (You can directly modify json file, if you want.)
     
     As you guess, this tool was named after a certain great graphic novel.
+    
+    Usage : 1) Execute "watchman" script with an administrator privilege.
+            2) Open your favarite web-browser. (Please not so obsolete version...)
+            3) Access to http://localhost:5000/main or http://localhost:5000/ .
+            4) Play like the demo animation above.
 
  - lib/pinger.py : 
 
