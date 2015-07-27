@@ -195,7 +195,7 @@ class Pinger(Thread):
     _stats = SafeDict(lambda: StatsPing(0, 0, 0, 0)) # Its key is addr and its val is StatsPing instance
 
 
-    def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False):
+    def __init__(self, targets={}, intv_ping=1.0, timeout=3.0, is_receiver=False, is_fg=True):
 
         super(Pinger, self).__init__()
 
@@ -203,6 +203,7 @@ class Pinger(Thread):
         self._is_receiver = is_receiver
         self._timeout = timeout
         self._intv_ping = intv_ping
+        self._is_fg = is_fg
 
         if is_receiver:
             self._work_on_myduty = self._recv
@@ -249,9 +250,8 @@ class Pinger(Thread):
         self._ev.set()
 
     def _post_loop(self):
-        print ""
-
-        if self._is_receiver:
+        if self._is_fg and self._is_receiver:
+            print ""
             with self._history as history:
                 print str(history)
 
@@ -305,7 +305,9 @@ class Pinger(Thread):
                         stats_current = stats[res.addr]
                         stats[res.addr] = stats_current.update_recv(res)
 
-                # print res
+                if self._is_fg:
+                    print res
+
                 return res
 
         except socket.timeout as excpt:
@@ -338,7 +340,8 @@ class Pinger(Thread):
                         for out in outs:
                             if out in queue[addr_dst]:
                                 del queue[addr_dst][out]
-                                # print "del queuq seq {0} : send".format(out)
+                                if self._is_fg:
+                                    print "Timeout occurred on seq {0}".format(out)
 
                             history[addr_dst].append( ResultPing(addr_dst, out, ResultPing.TIMEOUT).as_record() )
 
@@ -395,14 +398,14 @@ class Pinger(Thread):
         return [dict(tup) for tup in sliced_tuples]
 
     @classmethod
-    def generate_senders(cls, targets):
+    def generate_senders(cls, targets, is_fg=True):
 
         grps_target = cls._resolve_name(targets)
         # print grps_target
 
         senders = []
         for grp in grps_target:
-            senders.append(cls(targets=grp) )
+            senders.append(cls(targets=grp, is_fg=is_fg) )
 
         return senders
 
@@ -418,7 +421,7 @@ def get_parser():
 
     return parser
 
-def generate_pingers(targets_list=[]):
+def generate_pingers(targets_list=[], is_fg=True):
 
     if not targets_list:
         parser = get_parser()
@@ -431,8 +434,8 @@ def generate_pingers(targets_list=[]):
 
         targets_list = args.targets
 
-    senders = Pinger.generate_senders(targets_list)
-    receiver = Pinger(is_receiver=True)
+    senders = Pinger.generate_senders(targets_list, is_fg=is_fg)
+    receiver = Pinger(is_receiver=True, is_fg=is_fg)
 
     return senders, receiver
 
@@ -474,7 +477,7 @@ def restart_pingers(targets, senders_current):
     stop_pingers(senders_current)
     Pinger.reset_results()
     
-    senders_new = Pinger.generate_senders(targets)
+    senders_new = Pinger.generate_senders(targets, is_fg=False)
 
     start_pingers(senders_new, is_fg=False)
 

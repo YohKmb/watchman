@@ -135,7 +135,7 @@ if __name__ == "__main__":
     path_conf = os.path.join(os.path.dirname(__file__), DEFAULT_CONFIGFILE)
     targets_list = _get_targets_enabled(path_conf)
 
-    senders, receiver = pinger.generate_pingers(targets_list=targets_list)
+    senders, receiver = pinger.generate_pingers(targets_list=targets_list, is_fg=False)
 
     try:
         pinger.start_pingers(senders, receiver, is_fg=False)

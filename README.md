@@ -40,6 +40,7 @@ The later is internally used in "watchman".
  - Future Support for Windows Platforms
 
     At this moment, this package is in beta-version. I'll support windows platforms and ping-springboards via ssh connections.
+    It's also planned to support IPv6.
 
 
 ### Requirement
