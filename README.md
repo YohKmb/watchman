@@ -3,6 +3,7 @@ watchman (beta)
 
 Graphical ICMP Monitoring Tool
 
+![demo](https://github.com/YohKmb/watchman/blob/master/.demo/watchman_demo_01.gif)
 
 ### Description
 
